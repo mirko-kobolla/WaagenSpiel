@@ -391,6 +391,14 @@ Beispiel:
 http://192.168.0.246:5187
 ```
 
+Wichtig: Fuer den aktuellen lokalen Entwicklungsserver muss die Adresse mit `http://` beginnen, nicht mit `https://`. Der Server verwendet derzeit keine TLS-Verschluesselung. Wenn Android meldet, dass keine verschluesselte Verbindung unterstuetzt wird, wurde wahrscheinlich `https://192.168.0.246:5187` eingegeben. Richtig ist:
+
+```text
+http://192.168.0.246:5187
+```
+
+Eine verschluesselte Verbindung fuer den dauerhaften Betrieb benoetigt ein HTTPS-Zertifikat und wird im Abschnitt 11 beschrieben. Ein lokales .NET-Entwicklungszertifikat wird von iPhone und Android nicht automatisch als vertrauenswuerdig akzeptiert.
+
 ### 17.4 Windows-Firewall freigeben
 
 Wenn der Server lokal funktioniert, aber das iPhone keine Verbindung bekommt, muss TCP-Port 5187 fuer eingehende Verbindungen freigegeben werden. PowerShell muss dafuer als Administrator gestartet werden:
@@ -412,6 +420,8 @@ Get-NetConnectionProfile
 ```
 
 Ein oeffentliches Netzwerkprofil sollte nicht einfach freigegeben werden. Wenn es sich um das eigene vertrauenswuerdige WLAN handelt, kann das Profil in den Windows-Einstellungen auf `Privat` gestellt werden. Danach den Server neu starten und die iPhone-Adresse erneut aufrufen.
+
+Das aktuelle WLAN-Profil dieses Laptops ist `Public`. Deshalb muss die Firewallregel in einer **als Administrator gestarteten PowerShell** mit `-Profile Any` oder nach dem Umstellen des eigenen WLANs auf `Private` angelegt werden. Ohne diese Freigabe kann der Laptop selbst die Seite oeffnen, waehrend iPhone und Android keine Verbindung erhalten.
 
 ### 17.5 Port testen
 
