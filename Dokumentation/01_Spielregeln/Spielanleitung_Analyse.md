@@ -67,3 +67,29 @@ Die iPad-Version zeigt bei jeder Waage nur den Vergleich an: `Linke Seite schwer
 Das Spiel verbindet Experimentieren mit logischem Schlussfolgern. Die Nebenwaage erlaubt Hilfsmessungen, waehrend die Hauptwaage eine gemeinsame Zielbedingung vorgibt. Die Regel, platzierte Steine nicht mehr zu verschieben, macht jede Entscheidung dauerhaft und erhoeht den taktischen Anteil.
 
 Fuer eine faire Runde muessen die unbekannten Gewichte mit den erlaubten Waagen tatsaechlich eindeutig bestimmbar sein. Die Spielleitung sollte deshalb vorab eine Loesung pruefen oder ein vorbereitetes Gewichtsszenario verwenden.
+
+## Ablaufdiagramm
+
+```mermaid
+flowchart TD
+	A([Spielbeginn]) --> B[Spielleitung legt die Gewichte fest]
+	B --> C[Gruppen werden gebildet und Reihenfolge wird festgelegt]
+	C --> D[Naechste spielberechtigte Gruppe ist an der Reihe]
+	D --> E[Mindestens zwei Steine auf Hauptwaage oder Nebenwaage platzieren]
+	E --> F[Waagen vergleichen]
+	F --> G{Hauptwaage im Gleichgewicht?}
+	G -- Nein --> H[Zug wird fortgesetzt oder die naechste Gruppe wird aufgerufen]
+	H --> I{Kann noch ein Zug gespielt werden?}
+	I -- Ja --> D
+	I -- Nein --> N([Spielende: Klasse verliert])
+	G -- Ja --> J[Gewichte logisch bestimmen und Tipp abgeben]
+	J --> K{Tipp korrekt?}
+	K -- Nein --> L[Gruppe scheidet aus]
+	K -- Ja --> M[Gruppe wird erfolgreich abgeschlossen]
+	L --> O{Weitere spielberechtigte Gruppe?}
+	M --> O
+	O -- Ja --> D
+	O -- Nein --> P{Hauptwaage am Ende ausbalanciert und alle Gewichte korrekt?}
+	P -- Ja --> Q([Spielende: Klasse gewinnt])
+	P -- Nein --> N
+```
