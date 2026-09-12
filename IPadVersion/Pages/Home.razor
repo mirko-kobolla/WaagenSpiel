@@ -18,7 +18,10 @@
 
 	<section class="status-strip" aria-live="polite">
 		<span class="status-dot"></span>
-		<span>@StatusText</span>
+		<div>
+			<strong>Spielstatus</strong>
+			<span>@StatusText</span>
+		</div>
 	</section>
 
 	<main>
@@ -103,10 +106,10 @@
 		</section>
 
 		<section class="action-row">
-			<button class="primary-action" @onclick="EvaluateGame">Lösung prüfen <span>→</span></button>
+			<button class="primary-action" disabled="@(!CanEvaluate)" @onclick="EvaluateGame">Hauptwaage prüfen <span>→</span></button>
 			<button class="secondary-action" @onclick="ResetGame">Neue Partie</button>
 		</section>
-		<p class="rules-note">Die Gewichte bleiben verborgen. Du wechselst automatisch zur nächsten Gruppe, sobald du eine gültige Lösung gefunden hast.</p>
+		<p class="rules-note"><strong>Hauptwaage prüfen</strong> beendet den Zug: Nur wenn mindestens zwei Steine platziert sind und die Hauptwaage ausgeglichen ist, wechselt das Spiel zur nächsten Gruppe. Das Statusfeld oben erklärt jeden Schritt.</p>
 	</main>
 </div>
 
@@ -134,10 +137,22 @@
 
 		if (left)
 		{
+			if (scaleIndex == 0 && !IstHauptwaagenKombinationGueltig(true))
+			{
+				StatusText = "Nicht möglich: Auf der Hauptwaage dürfen links und rechts nicht dieselben Steine liegen.";
+				return;
+			}
+
 			Waagen[scaleIndex].SteiLinksPlatzieren(SelectedStone);
 		}
 		else
 		{
+			if (scaleIndex == 0 && !IstHauptwaagenKombinationGueltig(false))
+			{
+				StatusText = "Nicht möglich: Auf der Hauptwaage dürfen links und rechts nicht dieselben Steine liegen.";
+				return;
+			}
+
 			Waagen[scaleIndex].SteinRechtsPlatzieren(SelectedStone);
 		}
 
@@ -188,6 +203,22 @@
 	}
 
 	private int VerbleibendeSteine() => Manager.HoleAktuelleGruppe().Steine.Count(stone => !stone.Platziert);
+
+	private bool CanEvaluate => Waagen.Sum(scale => scale.LinkeSeite.Count + scale.RechteSeite.Count) >= 2;
+
+	private bool IstHauptwaagenKombinationGueltig(bool left)
+	{
+		if (SelectedStone is null)
+		{
+			return false;
+		}
+
+		var leftColors = Waagen[0].LinkeSeite.Select(stone => stone.Farbe).ToList();
+		var rightColors = Waagen[0].RechteSeite.Select(stone => stone.Farbe).ToList();
+		(left ? leftColors : rightColors).Add(SelectedStone.Farbe);
+
+		return !leftColors.OrderBy(color => color).SequenceEqual(rightColors.OrderBy(color => color));
+	}
 
 	private static string GewichtsStatus(Waage scale)
 	{

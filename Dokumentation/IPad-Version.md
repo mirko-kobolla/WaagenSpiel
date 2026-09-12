@@ -321,14 +321,18 @@ Die konkreten Gewichte werden nicht mehr angezeigt. Unter den Seiten steht nur n
 
 Ein platzierter Stein ist danach deaktiviert und kann in dieser Runde nicht noch einmal verwendet werden.
 
-### Was bedeutet `Loesung pruefen`?
+Auf der Hauptwaage darf keine identische Farbkombination auf beiden Seiten entstehen. Wenn ein Platzieren zu derselben Kombination links und rechts fuehren wuerde, wird der Stein nicht platziert und das Statusfeld erklaert den Grund. Diese Einschraenkung gilt nicht fuer die Nebenwaage.
 
-`Loesung pruefen` ersetzt die fruehere Beschriftung `Auswertung anzeigen`. Der Button prueft ausschliesslich die Hauptwaage, ob sie:
+### Was bedeutet `Hauptwaage pruefen`?
+
+`Hauptwaage pruefen` beendet den Zug. Der Button ist erst aktiv, wenn mindestens zwei Steine auf den Waagen liegen. Er prueft ausschliesslich die Hauptwaage, ob sie:
 
 - links und rechts gleich schwer ist und
 - auf beiden Seiten nicht dieselbe Farbkombination liegt.
 
 Das Gewicht wird weiterhin intern berechnet, aber nicht auf dem Bildschirm ausgegeben. Bei einer falschen Kombination erscheint eine entsprechende Statusmeldung und die Gruppe bleibt aktiv.
+
+Der Bereich oben ist das **Spielstatusfeld**. Er zeigt Rueckmeldungen zur aktuellen Aktion, zum Beispiel welcher Stein ausgewaehlt wurde, ob eine Platzierung abgelehnt wurde, ob die Hauptwaage noch nicht geloest ist oder welche Gruppe als naechste an der Reihe ist.
 
 ### Wie wechseln die Gruppen?
 
