@@ -101,10 +101,10 @@ In `IPadVersion/Pages/Home.razor` wurde die Demo-Startseite durch das eigentlich
 Die Bedienung funktioniert so:
 
 1. Einen farbigen Stein antippen.
-2. Eine Zielseite auswaehlen: Waage 1 oder 2, jeweils links oder rechts.
+2. Eine Zielseite auswaehlen: Hauptwaage oder Nebenwaage, jeweils links oder rechts.
 3. Weitere Steine platzieren.
-4. `Auswertung anzeigen` antippen.
-5. Wenn eine Waage gleich schwer ist und die Farbkombinationen nicht identisch sind, wird die Gruppe als geloest markiert.
+4. `Loesung pruefen` antippen.
+5. Wenn die Hauptwaage gleich schwer ist und die Farbkombinationen nicht identisch sind, wird die Gruppe als geloest markiert.
 6. Mit `Neue Partie` kann das Spiel jederzeit zurueckgesetzt werden.
 
 Die Oberflaeche wurde fuer Touch angepasst:
@@ -311,7 +311,7 @@ Die Waagen heissen in der Anwendung jetzt:
 - **Hauptwaage** statt Waage 1
 - **Nebenwaage** statt Waage 2
 
-Die konkreten Gewichte werden nicht mehr angezeigt. Auf jeder Seite steht nur noch `Gewicht verborgen`. Das Spiel soll dadurch ueber die Farbkombinationen und die sichtbaren Gleichgewichts-Status geloest werden, nicht durch direktes Ablesen der Zahlen.
+Die konkreten Gewichte werden nicht mehr angezeigt. Unter den Seiten steht nur noch `Gewicht verborgen`; im Kopf der Waage wird stattdessen `Linke Seite schwerer`, `Rechte Seite schwerer`, `Im Gleichgewicht` oder bei einer leeren Waage `Noch keine Steine platziert` angezeigt. Das Spiel soll dadurch ueber die Farbkombinationen und den relativen Vergleich geloest werden, nicht durch direktes Ablesen der Zahlen.
 
 ### Einen Stein platzieren
 
@@ -323,7 +323,7 @@ Ein platzierter Stein ist danach deaktiviert und kann in dieser Runde nicht noch
 
 ### Was bedeutet `Loesung pruefen`?
 
-`Loesung pruefen` ersetzt die fruehere Beschriftung `Auswertung anzeigen`. Der Button prueft, ob eine der beiden Waagen:
+`Loesung pruefen` ersetzt die fruehere Beschriftung `Auswertung anzeigen`. Der Button prueft ausschliesslich die Hauptwaage, ob sie:
 
 - links und rechts gleich schwer ist und
 - auf beiden Seiten nicht dieselbe Farbkombination liegt.

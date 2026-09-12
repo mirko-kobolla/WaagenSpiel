@@ -8,7 +8,7 @@ Diese Erweiterung verhindert, dass durch einen neuen Stein auf der Hauptwaage au
 
 Vor dem Platzieren wird die Aktion simuliert. Sind die Farbmengen auf der linken und rechten Seite danach gleich, wird das Platzieren abgebrochen. Die Statusanzeige informiert die Spieler ueber den Grund; der Stein bleibt unplatziert.
 
-Die Pruefung gilt nur fuer die Hauptwaage. Die Zweitwaage bleibt unveraendert.
+Die Pruefung gilt nur fuer die Hauptwaage. Die Nebenwaage bleibt unveraendert und dient als Hilfswaage.
 
 ## Betroffene Programmteile
 

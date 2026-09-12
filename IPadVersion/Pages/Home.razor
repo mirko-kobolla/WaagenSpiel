@@ -147,12 +147,12 @@
 
 	private void EvaluateGame()
 	{
-		var balancedScale = Waagen.FindIndex(scale => scale.IstAusbalanciert());
-		if (balancedScale >= 0)
+		var mainScale = Waagen[0];
+		if (mainScale.IstAusbalanciert())
 		{
 			var group = Manager.HoleAktuelleGruppe();
 			group.Ausgeschieden = true;
-			StatusText = $"Treffer! Die {(balancedScale == 0 ? "Hauptwaage" : "Nebenwaage")} ist ausgeglichen. Gruppe {Manager.AktuelleGruppe + 2} ist jetzt dran.";
+			StatusText = $"Treffer! Die Hauptwaage ist ausgeglichen. Gruppe {Manager.AktuelleGruppe + 2} ist jetzt dran.";
 			ClearScales();
 			if (!Manager.NaechsteGruppe())
 			{
@@ -161,7 +161,7 @@
 		}
 		else
 		{
-			StatusText = "Noch kein Treffer. Prüfe Gewichte und Farbkombinationen.";
+			StatusText = "Noch kein Treffer. Nur die Hauptwaage kann die Lösung bestätigen.";
 		}
 	}
 
@@ -189,7 +189,22 @@
 
 	private int VerbleibendeSteine() => Manager.HoleAktuelleGruppe().Steine.Count(stone => !stone.Platziert);
 
-	private static string GewichtsStatus(Waage scale) => scale.GewichtLinks() == scale.GewichtRechts() ? "Im Gleichgewicht" : "Noch nicht ausgeglichen";
+	private static string GewichtsStatus(Waage scale)
+	{
+		if (scale.LinkeSeite.Count == 0 && scale.RechteSeite.Count == 0)
+		{
+			return "Noch keine Steine platziert";
+		}
+
+		if (scale.GewichtLinks() == scale.GewichtRechts())
+		{
+			return "Im Gleichgewicht";
+		}
+
+		return scale.GewichtLinks() > scale.GewichtRechts()
+			? "Linke Seite schwerer"
+			: "Rechte Seite schwerer";
+	}
 
 	private static string StoneClass(Stein stone) => stone.Farbe.ToLowerInvariant();
 }
