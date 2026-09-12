@@ -29,7 +29,7 @@
 				<article class="scale-card">
 					<div class="scale-card-header">
 						<div>
-							<span class="card-kicker">@WaagenName[scaleIndex]</span>
+							<span class="card-kicker">@(scaleIndex == 0 ? "Hauptwaage" : "Nebenwaage")</span>
 							<h2>@GewichtsStatus(scale)</h2>
 						</div>
 						<span class="scale-icon" aria-hidden="true">⚖</span>
@@ -94,8 +94,8 @@
 						@for (var scaleIndex = 0; scaleIndex < Waagen.Count; scaleIndex++)
 						{
 							var targetScale = scaleIndex;
-							<button class="target-button" @onclick="() => PlaceSelectedStone(targetScale, true)">@WaagenName[targetScale], links</button>
-							<button class="target-button" @onclick="() => PlaceSelectedStone(targetScale, false)">@WaagenName[targetScale], rechts</button>
+							<button class="target-button" @onclick="() => PlaceSelectedStone(targetScale, true)">@(targetScale == 0 ? "Hauptwaage" : "Nebenwaage"), links</button>
+							<button class="target-button" @onclick="() => PlaceSelectedStone(targetScale, false)">@(targetScale == 0 ? "Hauptwaage" : "Nebenwaage"), rechts</button>
 						}
 					</div>
 				</div>
@@ -103,28 +103,16 @@
 		</section>
 
 		<section class="action-row">
-			<button class="primary-action" @onclick="EvaluateGame">Kombination prüfen <span>→</span></button>
+			<button class="primary-action" @onclick="EvaluateGame">Lösung prüfen <span>→</span></button>
 			<button class="secondary-action" @onclick="ResetGame">Neue Partie</button>
 		</section>
-
-		<section class="group-controls" aria-label="Gruppensteuerung">
-			<div>
-				<span class="card-kicker">Gruppensteuerung</span>
-				<strong>Gruppe @Manager.HoleAktuelleGruppe().Nummer von @Manager.Gruppen.Count</strong>
-				<p>Nach einem Treffer wird automatisch die nächste Gruppe geöffnet.</p>
-			</div>
-			<div class="group-actions">
-				<button class="secondary-action" @onclick="PreviousGroup" disabled="@(Manager.AktuelleGruppe == 0)">Vorherige Gruppe</button>
-				<button class="secondary-action" @onclick="NextGroup" disabled="@(Manager.AktuelleGruppe == Manager.Gruppen.Count - 1)">Nächste Gruppe</button>
-			</div>
-		</section>
+		<p class="rules-note">Die Gewichte bleiben verborgen. Du wechselst automatisch zur nächsten Gruppe, sobald du eine gültige Lösung gefunden hast.</p>
 	</main>
 </div>
 
 @code {
 	private readonly SpielManager Manager = new(3);
 	private readonly List<Waage> Waagen = new() { new Waage(), new Waage() };
-	private readonly string[] WaagenName = { "Hauptwaage", "Nebenwaage" };
 	private Stein? SelectedStone;
 	private string StatusText = "Wähle einen Stein aus, um ihn auf einer Waage zu platzieren.";
 
@@ -153,7 +141,7 @@
 			Waagen[scaleIndex].SteinRechtsPlatzieren(SelectedStone);
 		}
 
-			StatusText = $"{SelectedStone.Farbe} liegt auf der {WaagenName[scaleIndex]}.";
+			StatusText = $"{SelectedStone.Farbe} liegt auf {(scaleIndex == 0 ? "der Hauptwaage" : "der Nebenwaage")}.";
 		SelectedStone = null;
 	}
 
@@ -164,7 +152,7 @@
 		{
 			var group = Manager.HoleAktuelleGruppe();
 			group.Ausgeschieden = true;
-			StatusText = $"Treffer! Die {WaagenName[balancedScale]} ist ausgeglichen. Die nächste Gruppe ist dran.";
+			StatusText = $"Treffer! Die {(balancedScale == 0 ? "Hauptwaage" : "Nebenwaage")} ist ausgeglichen. Gruppe {Manager.AktuelleGruppe + 2} ist jetzt dran.";
 			ClearScales();
 			if (!Manager.NaechsteGruppe())
 			{
@@ -196,28 +184,6 @@
 		{
 			scale.LinkeSeite.Clear();
 			scale.RechteSeite.Clear();
-		}
-	}
-
-	private void PreviousGroup()
-	{
-		if (Manager.AktuelleGruppe > 0)
-		{
-			Manager.AktuelleGruppe--;
-			ClearScales();
-			SelectedStone = null;
-			StatusText = $"Gruppe {Manager.HoleAktuelleGruppe().Nummer} geöffnet.";
-		}
-	}
-
-	private void NextGroup()
-	{
-		if (Manager.AktuelleGruppe < Manager.Gruppen.Count - 1)
-		{
-			Manager.AktuelleGruppe++;
-			ClearScales();
-			SelectedStone = null;
-			StatusText = $"Gruppe {Manager.HoleAktuelleGruppe().Nummer} geöffnet.";
 		}
 	}
 

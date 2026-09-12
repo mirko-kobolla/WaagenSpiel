@@ -103,12 +103,9 @@ Die Bedienung funktioniert so:
 1. Einen farbigen Stein antippen.
 2. Eine Zielseite auswaehlen: Waage 1 oder 2, jeweils links oder rechts.
 3. Weitere Steine platzieren.
-4. `Kombination prüfen` antippen. Das Spiel berechnet die Gewichte intern, zeigt sie aber nicht an.
+4. `Auswertung anzeigen` antippen.
 5. Wenn eine Waage gleich schwer ist und die Farbkombinationen nicht identisch sind, wird die Gruppe als geloest markiert.
-6. Mit `Nächste Gruppe` oder `Vorherige Gruppe` kann die aktive Gruppe gewechselt werden. Nach einem Treffer wechselt das Spiel automatisch zur nächsten Gruppe.
-7. Mit `Neue Partie` kann das Spiel jederzeit zurueckgesetzt werden.
-
-Die beiden Waagen heißen in der iPad-Version **Hauptwaage** und **Nebenwaage**. Die exakten Grammwerte werden absichtlich nicht angezeigt, damit die Spieler die Kombination aus den sichtbaren Vergleichsergebnissen selbst ermitteln.
+6. Mit `Neue Partie` kann das Spiel jederzeit zurueckgesetzt werden.
 
 Die Oberflaeche wurde fuer Touch angepasst:
 
@@ -175,21 +172,6 @@ Die Option `0.0.0.0` sorgt dafuer, dass der Server nicht nur fuer den Laptop sel
 ### 9.3 Verbindung erlauben
 
 Falls Windows beim ersten Start nach einer Firewall-Freigabe fragt, muss der Zugriff fuer private Netzwerke erlaubt werden. In einem oeffentlichen oder fremden WLAN sollte der Server nicht freigegeben werden.
-
-Wenn das iPhone meldet, dass der Server nicht antwortet, sind meistens das Netzwerkprofil oder die Firewall die Ursache. Das WLAN muss als **Privat** eingestuft sein. PowerShell muss dafuer als Administrator gestartet werden. Danach koennen diese Befehle ausgefuehrt werden:
-
-```powershell
-Set-NetConnectionProfile -InterfaceAlias "WLAN" -NetworkCategory Private
-New-NetFirewallRule -DisplayName "Waagenspiel iPad PWA 5187" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 5187 -Profile Private
-```
-
-Anschließend den Entwicklungsserver neu starten und auf dem iPhone erneut diese Adresse öffnen:
-
-```text
-http://192.168.0.246:5187
-```
-
-Falls die Befehle wegen fehlender Administratorrechte abgelehnt werden, muessen sie in einem **als Administrator gestarteten** PowerShell-Fenster ausgefuehrt werden.
 
 ### 9.4 Auf dem iPad oder iPhone oeffnen
 
@@ -321,3 +303,131 @@ git branch --show-current
 4. Auf dem iPad `http://LAPTOP-IP:5187` in Safari oeffnen.
 5. Steine antippen und auf den Waagen platzieren.
 6. Spaeter fuer echte Offline-Installation ein HTTPS-Hosting verwenden.
+
+## 16. Aktuelle Bedienung und Spielablauf
+
+Die Waagen heissen in der Anwendung jetzt:
+
+- **Hauptwaage** statt Waage 1
+- **Nebenwaage** statt Waage 2
+
+Die konkreten Gewichte werden nicht mehr angezeigt. Auf jeder Seite steht nur noch `Gewicht verborgen`. Das Spiel soll dadurch ueber die Farbkombinationen und die sichtbaren Gleichgewichts-Status geloest werden, nicht durch direktes Ablesen der Zahlen.
+
+### Einen Stein platzieren
+
+1. Einen verfuegbaren farbigen Stein antippen.
+2. Eine Seite der Hauptwaage oder Nebenwaage auswaehlen.
+3. Den Vorgang fuer weitere Steine wiederholen.
+
+Ein platzierter Stein ist danach deaktiviert und kann in dieser Runde nicht noch einmal verwendet werden.
+
+### Was bedeutet `Loesung pruefen`?
+
+`Loesung pruefen` ersetzt die fruehere Beschriftung `Auswertung anzeigen`. Der Button prueft, ob eine der beiden Waagen:
+
+- links und rechts gleich schwer ist und
+- auf beiden Seiten nicht dieselbe Farbkombination liegt.
+
+Das Gewicht wird weiterhin intern berechnet, aber nicht auf dem Bildschirm ausgegeben. Bei einer falschen Kombination erscheint eine entsprechende Statusmeldung und die Gruppe bleibt aktiv.
+
+### Wie wechseln die Gruppen?
+
+Der Gruppenwechsel erfolgt automatisch:
+
+1. Die Steine der aktuellen Gruppe auf den Waagen verteilen.
+2. `Loesung pruefen` antippen.
+3. Bei einer gueltigen Loesung wird die aktuelle Gruppe als geloest markiert.
+4. Die Waagen werden geleert.
+5. Die naechste noch aktive Gruppe wird automatisch geladen.
+
+Die aktuelle Gruppennummer steht oben rechts. `Neue Partie` setzt alle drei Gruppen zurueck und beginnt wieder mit Gruppe 1.
+
+## 17. Wenn das iPhone den Server nicht erreicht
+
+Wenn die Seite auf dem Laptop funktioniert, Safari auf dem iPhone aber meldet, dass der Server nicht antwortet, liegt das meist an Netzwerk oder Firewall, nicht am Spiel selbst.
+
+### 17.1 Richtige IP-Adresse verwenden
+
+Die IP-Adresse muss aus dem aktiven WLAN-Adapter des Laptops stammen. In PowerShell:
+
+```powershell
+Get-NetIPAddress -AddressFamily IPv4 |
+  Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' }
+```
+
+Eine gueltige IPv4-Adresse hat vier Zahlen zwischen 0 und 255, zum Beispiel:
+
+```text
+192.168.0.246
+```
+
+Adressen wie `10.0.26200.9168` sind ungueltig, weil einzelne Bestandteile groesser als 255 sind.
+
+### 17.2 Gleiches WLAN pruefen
+
+Der Laptop und das iPhone muessen im selben privaten WLAN angemeldet sein. Das iPhone darf nicht ueber Mobilfunk, ein Gast-WLAN oder ein VPN verbunden sein. Bei einem Gast-WLAN kann die FritzBox die Kommunikation zwischen den Geraeten absichtlich blockieren.
+
+### 17.3 Server richtig starten
+
+Der Server muss auf allen Netzwerkadressen lauschen:
+
+```powershell
+dotnet run --project .\IPadVersion\IPadVersion.csproj --urls http://0.0.0.0:5187
+```
+
+Auf dem iPhone wird anschliessend diese Form verwendet:
+
+```text
+http://LAPTOP-IP:5187
+```
+
+Beispiel:
+
+```text
+http://192.168.0.246:5187
+```
+
+### 17.4 Windows-Firewall freigeben
+
+Wenn der Server lokal funktioniert, aber das iPhone keine Verbindung bekommt, muss TCP-Port 5187 fuer eingehende Verbindungen freigegeben werden. PowerShell muss dafuer als Administrator gestartet werden:
+
+```powershell
+New-NetFirewallRule `
+  -DisplayName "Waagenspiel PWA 5187" `
+  -Direction Inbound `
+  -Protocol TCP `
+  -LocalPort 5187 `
+  -Action Allow `
+  -Profile Private
+```
+
+Das WLAN-Profil sollte fuer diesen Test `Private` sein. Der Status kann geprueft werden:
+
+```powershell
+Get-NetConnectionProfile
+```
+
+Ein oeffentliches Netzwerkprofil sollte nicht einfach freigegeben werden. Wenn es sich um das eigene vertrauenswuerdige WLAN handelt, kann das Profil in den Windows-Einstellungen auf `Privat` gestellt werden. Danach den Server neu starten und die iPhone-Adresse erneut aufrufen.
+
+### 17.5 Port testen
+
+Auf dem Laptop kann geprueft werden, ob der Server laeuft:
+
+```powershell
+Test-NetConnection 127.0.0.1 -Port 5187
+```
+
+`TcpTestSucceeded : True` bestaetigt nur den lokalen Zugriff. Fuer den iPhone-Test muessen zusaetzlich gleiches WLAN und Firewall stimmen.
+
+## 18. Aenderungen dieser Version
+
+In dieser Version wurden folgende Punkte umgesetzt:
+
+- `Waage 1` wurde in `Hauptwaage` umbenannt.
+- `Waage 2` wurde in `Nebenwaage` umbenannt.
+- Die Anzeige der exakten Gewichte wurde aus der Oberflaeche entfernt.
+- `Auswertung anzeigen` wurde in `Loesung pruefen` umbenannt.
+- Die Bedeutung der Loesungspruefung wird direkt in der Oberflaeche erklaert.
+- Nach einer gueltigen Loesung wechselt das Spiel automatisch zur naechsten Gruppe.
+- Der Hinweistext erklaert, dass `Neue Partie` alle Gruppen zuruecksetzt.
+- Die iPhone-Verbindungsprobleme wurden als Netzwerk-/Firewall-Schritte dokumentiert.
