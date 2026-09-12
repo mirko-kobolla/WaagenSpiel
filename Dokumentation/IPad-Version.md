@@ -423,6 +423,51 @@ Ein oeffentliches Netzwerkprofil sollte nicht einfach freigegeben werden. Wenn e
 
 Das aktuelle WLAN-Profil dieses Laptops ist `Public`. Deshalb muss die Firewallregel in einer **als Administrator gestarteten PowerShell** mit `-Profile Any` oder nach dem Umstellen des eigenen WLANs auf `Private` angelegt werden. Ohne diese Freigabe kann der Laptop selbst die Seite oeffnen, waehrend iPhone und Android keine Verbindung erhalten.
 
+#### Uebergabe an den Administrator
+
+Die Firewallfreischaltung wurde auf diesem Laptop noch **nicht** ausgefuehrt, weil fuer das aktuelle Benutzerkonto keine Administratorrechte vorhanden sind. Der folgende Auftrag kann an den zustaendigen Administrator weitergegeben werden:
+
+1. PowerShell mit `Als Administrator ausfuehren` starten.
+2. Wenn das eigene WLAN als vertrauenswuerdig eingestuft werden darf, das Netzwerkprofil auf `Private` setzen.
+3. Diese Regel nur fuer den Entwicklungsport des Waagenspiels anlegen:
+
+```powershell
+New-NetFirewallRule `
+  -DisplayName "Waagenspiel PWA 5187" `
+  -Direction Inbound `
+  -Protocol TCP `
+  -LocalPort 5187 `
+  -Action Allow `
+  -Profile Private
+```
+
+Falls das Netzwerkprofil auf `Public` bleiben muss, darf der Administrator die Freigabe bewusst auf dieses Profil erweitern. Das sollte nur im eigenen, kontrollierten WLAN geschehen:
+
+```powershell
+Set-NetFirewallRule `
+  -DisplayName "Waagenspiel PWA 5187" `
+  -Profile Any
+```
+
+Die Regel kann anschliessend so kontrolliert werden:
+
+```powershell
+Get-NetFirewallRule -DisplayName "Waagenspiel PWA 5187" |
+  Get-NetFirewallPortFilter
+```
+
+Nach der Freigabe den PWA-Server neu starten und auf iPhone oder Android testen:
+
+```text
+http://192.168.0.246:5187
+```
+
+Nach dem Test kann der Administrator die Regel wieder entfernen:
+
+```powershell
+Remove-NetFirewallRule -DisplayName "Waagenspiel PWA 5187"
+```
+
 ### 17.5 Port testen
 
 Auf dem Laptop kann geprueft werden, ob der Server laeuft:
