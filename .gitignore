@@ -5,6 +5,7 @@ obj/
 *.suo
 *.pdb
 *.cache
+publish/
 git init
 git add .
 git commit -m "Initial commit"

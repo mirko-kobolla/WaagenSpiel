@@ -1,0 +1,194 @@
+﻿@page "/"
+
+<PageTitle>Waagenspiel | iPad-Version</PageTitle>
+
+<div class="game-shell">
+	<header class="game-header">
+		<div>
+			<p class="eyebrow">iPad-Version</p>
+			<h1>Waagenspiel</h1>
+			<p class="subtitle">Finde die geheime Kombination der aktuellen Gruppe.</p>
+		</div>
+		<div class="round-badge">
+			<span>Runde</span>
+			<strong>@(Manager.AktuelleGruppe + 1)</strong>
+			<small>von @Manager.Gruppen.Count</small>
+		</div>
+	</header>
+
+	<section class="status-strip" aria-live="polite">
+		<span class="status-dot"></span>
+		<span>@StatusText</span>
+	</section>
+
+	<main>
+		<section class="scale-grid" aria-label="Waagen">
+			@for (var scaleIndex = 0; scaleIndex < Waagen.Count; scaleIndex++)
+			{
+				var scale = Waagen[scaleIndex];
+				<article class="scale-card">
+					<div class="scale-card-header">
+						<div>
+							<span class="card-kicker">Waage @(scaleIndex + 1)</span>
+							<h2>@GewichtsStatus(scale)</h2>
+						</div>
+						<span class="scale-icon" aria-hidden="true">⚖</span>
+					</div>
+					<div class="scale-panels">
+						<div class="pan">
+							<span class="pan-label">Links</span>
+							<div class="placed-stones">
+								@foreach (var stone in scale.LinkeSeite)
+								{
+									<span class="mini-stone @StoneClass(stone)">@stone.Farbe</span>
+								}
+							</div>
+							<strong>@scale.GewichtLinks() g</strong>
+						</div>
+						<div class="pan-divider">vs.</div>
+						<div class="pan">
+							<span class="pan-label">Rechts</span>
+							<div class="placed-stones">
+								@foreach (var stone in scale.RechteSeite)
+								{
+									<span class="mini-stone @StoneClass(stone)">@stone.Farbe</span>
+								}
+							</div>
+							<strong>@scale.GewichtRechts() g</strong>
+						</div>
+					</div>
+				</article>
+			}
+		</section>
+
+		<section class="selection-panel">
+			<div class="section-heading">
+				<div>
+					<span class="card-kicker">Steine der Gruppe @Manager.HoleAktuelleGruppe().Nummer</span>
+					<h2>Stein auswählen</h2>
+				</div>
+				<span class="remaining-count">@VerbleibendeSteine() verfügbar</span>
+			</div>
+
+			<div class="stone-grid">
+				@foreach (var item in Manager.HoleAktuelleGruppe().Steine.Select((stone, index) => new { stone, index }))
+				{
+					<button class="stone-button @StoneClass(item.stone) @(SelectedStone == item.stone ? "selected" : "")"
+							disabled="@item.stone.Platziert"
+							@onclick="() => SelectStone(item.stone)">
+						<span class="stone-dot"></span>
+						<span>@item.stone.Farbe</span>
+						<small>@(item.stone.Platziert ? "platziert" : "unbekannt")</small>
+					</button>
+				}
+			</div>
+
+			@if (SelectedStone is not null)
+			{
+				<div class="placement-controls">
+					<div>
+						<span class="card-kicker">@SelectedStone.Farbe ausgewählt</span>
+						<strong>Wo soll der Stein liegen?</strong>
+					</div>
+					<div class="placement-actions">
+						@for (var scaleIndex = 0; scaleIndex < Waagen.Count; scaleIndex++)
+						{
+							var targetScale = scaleIndex;
+							<button class="target-button" @onclick="() => PlaceSelectedStone(targetScale, true)">Waage @(scaleIndex + 1), links</button>
+							<button class="target-button" @onclick="() => PlaceSelectedStone(targetScale, false)">Waage @(scaleIndex + 1), rechts</button>
+						}
+					</div>
+				</div>
+			}
+		</section>
+
+		<section class="action-row">
+			<button class="primary-action" @onclick="EvaluateGame">Auswertung anzeigen <span>→</span></button>
+			<button class="secondary-action" @onclick="ResetGame">Neue Partie</button>
+		</section>
+	</main>
+</div>
+
+@code {
+	private readonly SpielManager Manager = new(3);
+	private readonly List<Waage> Waagen = new() { new Waage(), new Waage() };
+	private Stein? SelectedStone;
+	private string StatusText = "Wähle einen Stein aus, um ihn auf einer Waage zu platzieren.";
+
+	private void SelectStone(Stein stone)
+	{
+		if (!stone.Platziert)
+		{
+			SelectedStone = stone;
+			StatusText = $"{stone.Farbe} ausgewählt. Wähle jetzt eine Seite.";
+		}
+	}
+
+	private void PlaceSelectedStone(int scaleIndex, bool left)
+	{
+		if (SelectedStone is null || SelectedStone.Platziert)
+		{
+			return;
+		}
+
+		if (left)
+		{
+			Waagen[scaleIndex].SteiLinksPlatzieren(SelectedStone);
+		}
+		else
+		{
+			Waagen[scaleIndex].SteinRechtsPlatzieren(SelectedStone);
+		}
+
+		StatusText = $"{SelectedStone.Farbe} liegt auf Waage {scaleIndex + 1}.";
+		SelectedStone = null;
+	}
+
+	private void EvaluateGame()
+	{
+		var balancedScale = Waagen.FindIndex(scale => scale.IstAusbalanciert());
+		if (balancedScale >= 0)
+		{
+			var group = Manager.HoleAktuelleGruppe();
+			group.Ausgeschieden = true;
+			StatusText = $"Treffer! Waage {balancedScale + 1} ist ausgeglichen. Die nächste Gruppe ist dran.";
+			ClearScales();
+			if (!Manager.NaechsteGruppe())
+			{
+				StatusText = "Alle Gruppen wurden erfolgreich ausgewertet. Starte eine neue Partie.";
+			}
+		}
+		else
+		{
+			StatusText = "Noch kein Treffer. Prüfe Gewichte und Farbkombinationen.";
+		}
+	}
+
+	private void ResetGame()
+	{
+		Manager.Gruppen.Clear();
+		for (var number = 1; number <= 3; number++)
+		{
+			Manager.Gruppen.Add(new Gruppe(number));
+		}
+		Manager.AktuelleGruppe = 0;
+		ClearScales();
+		SelectedStone = null;
+		StatusText = "Neue Partie gestartet. Wähle einen Stein aus.";
+	}
+
+	private void ClearScales()
+	{
+		foreach (var scale in Waagen)
+		{
+			scale.LinkeSeite.Clear();
+			scale.RechteSeite.Clear();
+		}
+	}
+
+	private int VerbleibendeSteine() => Manager.HoleAktuelleGruppe().Steine.Count(stone => !stone.Platziert);
+
+	private static string GewichtsStatus(Waage scale) => scale.GewichtLinks() == scale.GewichtRechts() ? "Im Gleichgewicht" : "Noch nicht ausgeglichen";
+
+	private static string StoneClass(Stein stone) => stone.Farbe.ToLowerInvariant();
+}
