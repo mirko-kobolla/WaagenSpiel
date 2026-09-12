@@ -8,6 +8,7 @@ Diese Dokumentation beschreibt die Spielregeln, die aktuelle technische Umsetzun
 - [Programmdokumentation](02_Programm/Programmdokumentation.md)
 - [Erweiterung: Hauptwaage](03_Erweiterungen/Hauptwaage_Kombinationen.md)
 - [Erweiterungsvorschlaege](03_Erweiterungen/Erweiterungsvorschlaege.md)
+- [iPad- und iPhone-Version](IPad-Version.md)
 
 ## Empfohlene Reihenfolge
 
