@@ -103,9 +103,12 @@ Die Bedienung funktioniert so:
 1. Einen farbigen Stein antippen.
 2. Eine Zielseite auswaehlen: Waage 1 oder 2, jeweils links oder rechts.
 3. Weitere Steine platzieren.
-4. `Auswertung anzeigen` antippen.
+4. `Kombination prüfen` antippen. Das Spiel berechnet die Gewichte intern, zeigt sie aber nicht an.
 5. Wenn eine Waage gleich schwer ist und die Farbkombinationen nicht identisch sind, wird die Gruppe als geloest markiert.
-6. Mit `Neue Partie` kann das Spiel jederzeit zurueckgesetzt werden.
+6. Mit `Nächste Gruppe` oder `Vorherige Gruppe` kann die aktive Gruppe gewechselt werden. Nach einem Treffer wechselt das Spiel automatisch zur nächsten Gruppe.
+7. Mit `Neue Partie` kann das Spiel jederzeit zurueckgesetzt werden.
+
+Die beiden Waagen heißen in der iPad-Version **Hauptwaage** und **Nebenwaage**. Die exakten Grammwerte werden absichtlich nicht angezeigt, damit die Spieler die Kombination aus den sichtbaren Vergleichsergebnissen selbst ermitteln.
 
 Die Oberflaeche wurde fuer Touch angepasst:
 
@@ -172,6 +175,21 @@ Die Option `0.0.0.0` sorgt dafuer, dass der Server nicht nur fuer den Laptop sel
 ### 9.3 Verbindung erlauben
 
 Falls Windows beim ersten Start nach einer Firewall-Freigabe fragt, muss der Zugriff fuer private Netzwerke erlaubt werden. In einem oeffentlichen oder fremden WLAN sollte der Server nicht freigegeben werden.
+
+Wenn das iPhone meldet, dass der Server nicht antwortet, sind meistens das Netzwerkprofil oder die Firewall die Ursache. Das WLAN muss als **Privat** eingestuft sein. PowerShell muss dafuer als Administrator gestartet werden. Danach koennen diese Befehle ausgefuehrt werden:
+
+```powershell
+Set-NetConnectionProfile -InterfaceAlias "WLAN" -NetworkCategory Private
+New-NetFirewallRule -DisplayName "Waagenspiel iPad PWA 5187" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 5187 -Profile Private
+```
+
+Anschließend den Entwicklungsserver neu starten und auf dem iPhone erneut diese Adresse öffnen:
+
+```text
+http://192.168.0.246:5187
+```
+
+Falls die Befehle wegen fehlender Administratorrechte abgelehnt werden, muessen sie in einem **als Administrator gestarteten** PowerShell-Fenster ausgefuehrt werden.
 
 ### 9.4 Auf dem iPad oder iPhone oeffnen
 

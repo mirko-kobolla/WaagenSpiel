@@ -57,8 +57,11 @@ h2 { font-size: 1.2rem; }
 .target-button, .secondary-action { background: transparent; border: 1px solid var(--teal); border-radius: 9px; color: var(--teal-dark); cursor: pointer; padding: 11px 13px; }
 .target-button:hover, .secondary-action:hover { background: #e7efea; }
 .action-row { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+.group-controls { align-items: center; background: #e7efea; border-left: 4px solid var(--teal); display: flex; gap: 20px; justify-content: space-between; margin-top: 18px; padding: 18px 20px; }
+.group-controls p { color: var(--muted); font-size: .85rem; margin: 6px 0 0; }
+.group-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .primary-action { background: var(--coral); border: 0; border-radius: 10px; color: white; cursor: pointer; font-weight: 700; padding: 14px 19px; }
 .primary-action span { font-size: 1.2rem; margin-left: 10px; }
 .primary-action:hover { background: #d76550; }
-@media (max-width: 700px) { .game-shell { padding: 28px 16px 44px; } .game-header { align-items: flex-start; } .round-badge { min-width: 72px; padding: 10px; } .scale-grid { grid-template-columns: 1fr; } .stone-grid { grid-template-columns: repeat(5, minmax(48px, 1fr)); } .stone-button { font-size: .75rem; min-height: 88px; } .placement-controls { align-items: stretch; flex-direction: column; } .placement-actions { justify-content: stretch; } .target-button { flex: 1 1 45%; } .action-row { flex-direction: column; } .primary-action, .secondary-action { width: 100%; } }
+@media (max-width: 700px) { .game-shell { padding: 28px 16px 44px; } .game-header { align-items: flex-start; } .round-badge { min-width: 72px; padding: 10px; } .scale-grid { grid-template-columns: 1fr; } .stone-grid { grid-template-columns: repeat(5, minmax(48px, 1fr)); } .stone-button { font-size: .75rem; min-height: 88px; } .placement-controls { align-items: stretch; flex-direction: column; } .placement-actions, .group-actions { justify-content: stretch; } .target-button { flex: 1 1 45%; } .group-controls { align-items: stretch; flex-direction: column; } .group-actions { flex-direction: column; } .action-row { flex-direction: column; } .primary-action, .secondary-action { width: 100%; } }
 @media (max-width: 430px) { .subtitle { font-size: .88rem; } .scale-card, .selection-panel { padding: 17px; } .stone-button { padding: 10px 3px; } .stone-button small { display: none; } }
