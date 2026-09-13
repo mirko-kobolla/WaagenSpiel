@@ -17,6 +17,15 @@ html, body { margin: 0; min-width: 320px; background: var(--paper); color: var(-
 button { font: inherit; }
 button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
 .game-shell { max-width: 1180px; margin: 0 auto; padding: 42px 28px 64px; }
+.setup-shell { align-items: center; display: flex; min-height: 100vh; padding-top: 24px; }
+.setup-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); margin: 0 auto; max-width: 620px; padding: 34px; width: 100%; }
+.setup-panel h1 { margin-bottom: 12px; }
+.setup-field { display: flex; flex-direction: column; gap: 7px; margin-top: 18px; }
+.setup-field label { color: var(--muted); font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.setup-field input, .setup-field select { background: #f6f3ec; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); font: inherit; min-height: 46px; padding: 0 13px; }
+.setup-field input:focus, .setup-field select:focus { border-color: var(--teal); outline: 3px solid rgba(13, 119, 113, .16); }
+.group-name-list { display: grid; gap: 0 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; }
+.start-action { margin-top: 28px; width: 100%; }
 .game-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 28px; }
 .eyebrow, .card-kicker { color: var(--teal); font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .eyebrow { margin: 0 0 8px; }
@@ -64,5 +73,12 @@ h2 { font-size: 1.2rem; }
 .primary-action:hover { background: #d76550; }
 .primary-action:disabled { background: #c6c1b7; cursor: not-allowed; opacity: .8; }
 .rules-note { color: var(--muted); font-size: .82rem; margin: 14px 2px 0; text-align: right; }
-@media (max-width: 700px) { .game-shell { padding: 28px 16px 44px; } .game-header { align-items: flex-start; } .round-badge { min-width: 72px; padding: 10px; } .scale-grid { grid-template-columns: 1fr; } .stone-grid { grid-template-columns: repeat(5, minmax(48px, 1fr)); } .stone-button { font-size: .75rem; min-height: 88px; } .placement-controls { align-items: stretch; flex-direction: column; } .placement-actions { justify-content: stretch; } .target-button { flex: 1 1 45%; } .action-row { flex-direction: column; } .primary-action, .secondary-action { width: 100%; } }
+.guess-panel { background: #e7efea; border: 1px solid #c8ddd2; border-radius: 18px; margin-top: 18px; padding: 24px; }
+.guess-note { color: var(--muted); margin: 12px 0 0; }
+.guess-grid { display: grid; gap: 10px; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 20px 0; }
+.guess-field { align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; padding: 10px; }
+.guess-field input { border: 1px solid var(--line); border-radius: 6px; min-width: 0; padding: 8px; text-align: center; width: 52px; }
+.guess-field input:focus { border-color: var(--teal); outline: 2px solid rgba(13, 119, 113, .16); }
+.guess-result { background: var(--panel); border-left: 4px solid var(--teal); color: var(--teal-dark); font-weight: 700; margin: 16px 0 0; padding: 12px 14px; }
+@media (max-width: 700px) { .game-shell { padding: 28px 16px 44px; } .setup-shell { padding-top: 16px; } .setup-panel { padding: 24px 18px; } .group-name-list { grid-template-columns: 1fr; } .game-header { align-items: flex-start; } .round-badge { min-width: 72px; padding: 10px; } .scale-grid { grid-template-columns: 1fr; } .stone-grid { grid-template-columns: repeat(5, minmax(48px, 1fr)); } .stone-button { font-size: .75rem; min-height: 88px; } .placement-controls { align-items: stretch; flex-direction: column; } .placement-actions { justify-content: stretch; } .target-button { flex: 1 1 45%; } .action-row { flex-direction: column; } .primary-action, .secondary-action { width: 100%; } .guess-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 430px) { .subtitle { font-size: .88rem; } .scale-card, .selection-panel { padding: 17px; } .stone-button { padding: 10px 3px; } .stone-button small { display: none; } }

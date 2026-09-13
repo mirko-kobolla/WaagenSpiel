@@ -70,3 +70,36 @@ Die Ansicht sollte vor dem naechsten Zug bestaetigt oder automatisch fuer einige
 3. Automatische Loesbarkeitspruefung bei waehlbarer Steinanzahl
 4. Tutorial mit abgestuften Hinweisen
 5. Punkte, Zeitlimit und weitere Spielmodi
+
+## 6. Gruppen in einem dauerhaften Rundlauf
+
+Nach dem Zug der letzten Gruppe soll automatisch wieder die erste Gruppe an die Reihe kommen. Die Waagen bleiben dabei bestehen und werden nicht geleert. Dadurch entsteht ein gemeinsamer Spielstand, an dem alle Gruppen nacheinander weiterarbeiten.
+
+Mögliche spätere Erweiterungen:
+
+- Anzeige der bisherigen Zugreihenfolge und der Anzahl absolvierter Runden
+- Ein sichtbarer Hinweis, welche Gruppe als Nächstes an der Reihe ist
+- Optional eine Begrenzung der Rundenzahl oder ein Zeitlimit für die gesamte Partie
+- Eine Übersicht, wie viele Steine jede Gruppe bereits auf den Waagen platziert hat
+
+## 7. Gewichte nach einer ausgeglichenen Hauptwaage raten
+
+Wenn die Hauptwaage ausgeglichen ist, kann die Spielleitung oder die aktive Gruppe über einen eigenen Button die Gewichte der Farben raten. Für jede Farbe wird ein vermutetes Gewicht eingetragen und anschließend gemeinsam geprüft.
+
+Die Anwendung sollte dabei:
+
+- den Button nur bei einer belegten und ausgeglichenen Hauptwaage anzeigen,
+- die exakten Gewichte weiterhin verborgen halten,
+- eine verständliche Rückmeldung bei richtigen oder falschen Angaben geben,
+- nach Möglichkeit anzeigen, welche Angaben bereits stimmen, ohne die übrigen Lösungen direkt zu verraten,
+- die Gewichtsabfrage unabhängig vom Gruppenwechsel offen oder abgeschlossen halten können.
+
+Für den Unterricht wäre zusätzlich sinnvoll, zwischen verschiedenen Auswertungen wählen zu können:
+
+- Alle Gewichte müssen vollständig richtig sein.
+- Ein Teil der richtigen Gewichte gibt Punkte.
+- Jede Gruppe erhält nur eine begrenzte Anzahl von Rateversuchen.
+
+## 8. Auswertung nach einer richtigen Gewichtsabfrage
+
+Nach einer vollständig richtigen Gewichtsabfrage könnte eine Abschlussübersicht erscheinen. Sie zeigt die Farben, die erratenen Gewichte, die benötigten Versuche und die beteiligten Gruppen. So wird aus dem gemeinsamen Waagenstand eine nachvollziehbare mathematische Auswertung.

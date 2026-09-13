@@ -98,14 +98,15 @@ Das ist wichtig, weil die Regeln nicht zweimal unabhaengig gepflegt werden muess
 
 In `IPadVersion/Pages/Home.razor` wurde die Demo-Startseite durch das eigentliche Spiel ersetzt.
 
-Die Bedienung funktioniert so:
+Vor dem Spielstart können die Anzahl der Gruppen und die Namen der Gruppen festgelegt werden. Die Bedienung funktioniert danach so:
 
 1. Einen farbigen Stein antippen.
 2. Eine Zielseite auswaehlen: Hauptwaage oder Nebenwaage, jeweils links oder rechts.
 3. Weitere Steine platzieren.
-4. `Loesung pruefen` antippen.
-5. Wenn die Hauptwaage gleich schwer ist und die Farbkombinationen nicht identisch sind, wird die Gruppe als geloest markiert.
-6. Mit `Neue Partie` kann das Spiel jederzeit zurueckgesetzt werden.
+4. `Zug beenden` antippen.
+5. Sobald mindestens zwei eigene Steine platziert sind, wird der Zug beendet und die naechste Gruppe uebernimmt die belegten Waagen.
+6. Nach dem Zug bleiben die Steine auf den gemeinsamen Waagen liegen; die naechste Gruppe spielt mit diesem Stand weiter.
+7. Mit `Neue Partie` kann das Spiel jederzeit neu konfiguriert und zurueckgesetzt werden.
 
 Die Oberflaeche wurde fuer Touch angepasst:
 
@@ -323,14 +324,13 @@ Ein platzierter Stein ist danach deaktiviert und kann in dieser Runde nicht noch
 
 Auf der Hauptwaage darf keine identische Farbkombination auf beiden Seiten entstehen. Wenn ein Platzieren zu derselben Kombination links und rechts fuehren wuerde, wird der Stein nicht platziert und das Statusfeld erklaert den Grund. Diese Einschraenkung gilt nicht fuer die Nebenwaage.
 
-### Was bedeutet `Hauptwaage pruefen`?
+### Was bedeutet `Zug beenden`?
 
-`Hauptwaage pruefen` beendet den Zug. Der Button ist erst aktiv, wenn mindestens zwei Steine auf den Waagen liegen. Er prueft ausschliesslich die Hauptwaage, ob sie:
+`Zug beenden` gibt den Zug an die naechste Gruppe weiter. Der Button ist erst aktiv, wenn die aktuelle Gruppe mindestens zwei eigene Steine platziert hat. Dabei bleiben beide Waagen unveraendert liegen.
 
-- links und rechts gleich schwer ist und
-- auf beiden Seiten nicht dieselbe Farbkombination liegt.
+Der aktuelle Zustand der Hauptwaage wird im Statusfeld weiterhin angezeigt. Ist sie ausgeglichen und liegen keine identischen Farbkombinationen gegenueber, wird das ebenfalls gemeldet.
 
-Das Gewicht wird weiterhin intern berechnet, aber nicht auf dem Bildschirm ausgegeben. Bei einer falschen Kombination erscheint eine entsprechende Statusmeldung und die Gruppe bleibt aktiv.
+Das Gewicht wird weiterhin intern berechnet, aber nicht auf dem Bildschirm ausgegeben.
 
 Der Bereich oben ist das **Spielstatusfeld**. Er zeigt Rueckmeldungen zur aktuellen Aktion, zum Beispiel welcher Stein ausgewaehlt wurde, ob eine Platzierung abgelehnt wurde, ob die Hauptwaage noch nicht geloest ist oder welche Gruppe als naechste an der Reihe ist.
 
@@ -341,8 +341,8 @@ Der Gruppenwechsel erfolgt automatisch:
 1. Die Steine der aktuellen Gruppe auf den Waagen verteilen.
 2. `Loesung pruefen` antippen.
 3. Bei einer gueltigen Loesung wird die aktuelle Gruppe als geloest markiert.
-4. Die Waagen werden geleert.
-5. Die naechste noch aktive Gruppe wird automatisch geladen.
+4. Die Waagen bleiben unveraendert liegen.
+5. Die naechste noch aktive Gruppe wird automatisch geladen und spielt mit dem aktuellen Waagenstand weiter.
 
 Die aktuelle Gruppennummer steht oben rechts. `Neue Partie` setzt alle drei Gruppen zurueck und beginnt wieder mit Gruppe 1.
 
@@ -487,6 +487,7 @@ In dieser Version wurden folgende Punkte umgesetzt:
 - Die Anzeige der exakten Gewichte wurde aus der Oberflaeche entfernt.
 - `Auswertung anzeigen` wurde in `Loesung pruefen` umbenannt.
 - Die Bedeutung der Loesungspruefung wird direkt in der Oberflaeche erklaert.
-- Nach einer gueltigen Loesung wechselt das Spiel automatisch zur naechsten Gruppe.
+- Nach einer gueltigen Loesung wechselt das Spiel automatisch zur naechsten Gruppe, ohne die gemeinsamen Waagen zu leeren.
+- Vor dem Spielstart koennen Anzahl und Namen der Gruppen festgelegt werden.
 - Der Hinweistext erklaert, dass `Neue Partie` alle Gruppen zuruecksetzt.
 - Die iPhone-Verbindungsprobleme wurden als Netzwerk-/Firewall-Schritte dokumentiert.

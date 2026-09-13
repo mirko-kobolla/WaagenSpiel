@@ -7,13 +7,16 @@ namespace WaagenSpiel.Models
     {
         public int Nummer { get; set; }
 
+        public string Name { get; set; }
+
         public List<Stein> Steine {  get; set; }
 
         public bool Ausgeschieden { get; set; }
 
-        public Gruppe(int nummer) 
+        public Gruppe(int nummer, string? name = null)
         {
             Nummer = nummer;
+            Name = string.IsNullOrWhiteSpace(name) ? $"Gruppe {nummer}" : name;
             Ausgeschieden = false;
 
             Steine = new List<Stein>

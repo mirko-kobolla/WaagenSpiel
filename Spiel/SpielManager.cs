@@ -30,22 +30,8 @@ namespace WaagenSpiel.Spiel
             if (Gruppen.Count == 0)
                 return false;
 
-            int startGruppe = AktuelleGruppe;
-
-            do
-            {
-                AktuelleGruppe++;
-                if (AktuelleGruppe >= Gruppen.Count)
-                {
-                    AktuelleGruppe = 0;
-                }
-                if (!Gruppen[AktuelleGruppe].Ausgeschieden)
-                {
-                    return true;
-                }
-            }
-            while (AktuelleGruppe != startGruppe);
-            return false;
+            AktuelleGruppe = (AktuelleGruppe + 1) % Gruppen.Count;
+            return true;
         }
     }
 }

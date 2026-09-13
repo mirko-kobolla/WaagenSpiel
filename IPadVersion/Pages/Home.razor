@@ -2,6 +2,41 @@
 
 <PageTitle>Waagenspiel | iPad-Version</PageTitle>
 
+@if (!SpielGestartet)
+{
+	<div class="game-shell setup-shell">
+		<section class="setup-panel">
+			<p class="eyebrow">Vorbereitung</p>
+			<h1>Waagenspiel</h1>
+			<p class="subtitle">Richtet die gemeinsame Partie ein, bevor der erste Zug beginnt.</p>
+
+			<div class="setup-field">
+				<label for="group-count">Anzahl der Gruppen</label>
+				<select id="group-count" @bind="AnzahlGruppen" @bind:after="GruppenanzahlGeaendert">
+					@for (var count = 2; count <= 8; count++)
+					{
+						<option value="@count">@count Gruppen</option>
+					}
+				</select>
+			</div>
+
+			<div class="group-name-list">
+				@for (var index = 0; index < AnzahlGruppen; index++)
+				{
+					var groupIndex = index;
+					<div class="setup-field">
+						<label for="group-@groupIndex">Name der Gruppe @(groupIndex + 1)</label>
+						<input id="group-@groupIndex" @bind="Gruppennamen[groupIndex]" maxlength="30" />
+					</div>
+				}
+			</div>
+
+			<button class="primary-action start-action" @onclick="StartGame">Partie starten <span>→</span></button>
+		</section>
+	</div>
+}
+else
+{
 <div class="game-shell">
 	<header class="game-header">
 		<div>
@@ -10,8 +45,8 @@
 			<p class="subtitle">Finde die geheime Kombination der aktuellen Gruppe.</p>
 		</div>
 		<div class="round-badge">
-			<span>Runde</span>
-			<strong>@(Manager.AktuelleGruppe + 1)</strong>
+			<span>Am Zug</span>
+			<strong>@Manager.HoleAktuelleGruppe().Name</strong>
 			<small>von @Manager.Gruppen.Count</small>
 		</div>
 	</header>
@@ -67,7 +102,7 @@
 		<section class="selection-panel">
 			<div class="section-heading">
 				<div>
-					<span class="card-kicker">Steine der Gruppe @Manager.HoleAktuelleGruppe().Nummer</span>
+					<span class="card-kicker">Steine von @Manager.HoleAktuelleGruppe().Name</span>
 					<h2>Stein auswählen</h2>
 				</div>
 				<span class="remaining-count">@VerbleibendeSteine() verfügbar</span>
@@ -77,11 +112,11 @@
 				@foreach (var item in Manager.HoleAktuelleGruppe().Steine.Select((stone, index) => new { stone, index }))
 				{
 					<button class="stone-button @StoneClass(item.stone) @(SelectedStone == item.stone ? "selected" : "")"
-							disabled="@item.stone.Platziert"
+							disabled="@(item.stone.Platziert || SpielBeendet)"
 							@onclick="() => SelectStone(item.stone)">
 						<span class="stone-dot"></span>
 						<span>@item.stone.Farbe</span>
-						<small>@(item.stone.Platziert ? "platziert" : "unbekannt")</small>
+						<small>@SteinHinweis(item.stone)</small>
 					</button>
 				}
 			</div>
@@ -106,22 +141,93 @@
 		</section>
 
 		<section class="action-row">
-			<button class="primary-action" disabled="@(!CanEvaluate)" @onclick="EvaluateGame">Hauptwaage prüfen <span>→</span></button>
+			<button class="primary-action" disabled="@(!CanEvaluate || SpielBeendet)" @onclick="EvaluateGame">Zug beenden <span>→</span></button>
+			@if (CanGuessWeights && !SpielBeendet)
+			{
+				<button class="secondary-action" type="button" @onclick="ShowWeightGuess">Gewichte raten</button>
+			}
 			<button class="secondary-action" @onclick="ResetGame">Neue Partie</button>
 		</section>
-		<p class="rules-note"><strong>Hauptwaage prüfen</strong> beendet den Zug: Nur wenn mindestens zwei Steine platziert sind und die Hauptwaage ausgeglichen ist, wechselt das Spiel zur nächsten Gruppe. Das Statusfeld oben erklärt jeden Schritt.</p>
+		<p class="rules-note"><strong>Zug beenden</strong> gibt den Zug frei, sobald die aktuelle Gruppe mindestens zwei eigene Steine platziert hat oder die belegte Hauptwaage ausgeglichen ist. Die Gewichtsabfrage ist freiwillig.</p>
+
+		@if (GewichteRatenSichtbar)
+		{
+			<section class="guess-panel">
+				<div class="section-heading">
+					<div>
+						<span class="card-kicker">Hauptwaage ausgeglichen</span>
+						<h2>Wie schwer sind die Farben?</h2>
+					</div>
+				</div>
+				<p class="guess-note">Trage für jede Farbe das vermutete Gewicht ein.</p>
+				<div class="guess-grid">
+					@foreach (var color in Farben)
+					{
+						<label class="guess-field">
+							<span class="mini-stone @color.ToLowerInvariant()">@color</span>
+							<input type="number" min="1" @bind="GewichtsTipps[color]" />
+							<span>g</span>
+						</label>
+					}
+				</div>
+				<button class="primary-action" @onclick="CheckWeightGuess">Gewichte prüfen</button>
+				@if (!string.IsNullOrWhiteSpace(GewichtsErgebnis))
+				{
+					<p class="guess-result" aria-live="polite">@GewichtsErgebnis</p>
+				}
+			</section>
+		}
 	</main>
 </div>
+}
 
 @code {
-	private readonly SpielManager Manager = new(3);
+	private SpielManager Manager = new(3);
 	private readonly List<Waage> Waagen = new() { new Waage(), new Waage() };
+	private readonly List<string> Gruppennamen = new() { "Gruppe 1", "Gruppe 2", "Gruppe 3" };
+	private int AnzahlGruppen = 3;
+	private bool SpielGestartet;
 	private Stein? SelectedStone;
 	private string StatusText = "Wähle einen Stein aus, um ihn auf einer Waage zu platzieren.";
+	private readonly string[] Farben = { "Rot", "Lila", "Gelb", "Blau", "Grün" };
+	private readonly Dictionary<string, int> GewichtsTipps = new();
+	private readonly HashSet<string> RichtigGerateneFarben = new();
+	private bool GewichteRatenSichtbar;
+	private string GewichtsErgebnis = string.Empty;
+	private bool SpielBeendet;
+	private bool SpielGewonnen;
+
+	private void GruppenanzahlGeaendert()
+	{
+		while (Gruppennamen.Count < AnzahlGruppen)
+		{
+			Gruppennamen.Add($"Gruppe {Gruppennamen.Count + 1}");
+		}
+	}
+
+	private void StartGame()
+	{
+		GruppenanzahlGeaendert();
+		Manager = new SpielManager(AnzahlGruppen);
+		for (var index = 0; index < AnzahlGruppen; index++)
+		{
+			Manager.Gruppen[index].Name = string.IsNullOrWhiteSpace(Gruppennamen[index])
+				? $"Gruppe {index + 1}"
+				: Gruppennamen[index].Trim();
+		}
+
+		SpielGestartet = true;
+		SpielBeendet = false;
+		SpielGewonnen = false;
+		RichtigGerateneFarben.Clear();
+		GewichteRatenSichtbar = false;
+		SelectedStone = null;
+		StatusText = $"{Manager.HoleAktuelleGruppe().Name} beginnt. Wähle einen Stein aus.";
+	}
 
 	private void SelectStone(Stein stone)
 	{
-		if (!stone.Platziert)
+		if (!stone.Platziert && !SpielBeendet)
 		{
 			SelectedStone = stone;
 			StatusText = $"{stone.Farbe} ausgewählt. Wähle jetzt eine Seite.";
@@ -162,35 +268,53 @@
 
 	private void EvaluateGame()
 	{
-		var mainScale = Waagen[0];
-		if (mainScale.IstAusbalanciert())
+		if (!CanEvaluate || SpielBeendet)
 		{
-			var group = Manager.HoleAktuelleGruppe();
-			group.Ausgeschieden = true;
-			StatusText = $"Treffer! Die Hauptwaage ist ausgeglichen. Gruppe {Manager.AktuelleGruppe + 2} ist jetzt dran.";
-			ClearScales();
-			if (!Manager.NaechsteGruppe())
-			{
-				StatusText = "Alle Gruppen wurden erfolgreich ausgewertet. Starte eine neue Partie.";
-			}
+			return;
+		}
+
+		var mainScale = Waagen[0];
+		var group = Manager.HoleAktuelleGruppe();
+		var isBalanced = mainScale.IstAusbalanciert();
+		group.Ausgeschieden = true;
+		SelectedStone = null;
+		GewichteRatenSichtbar = false;
+
+		if (AlleSteinePlatziert())
+		{
+			SpielBeendet = true;
+			SpielGewonnen = isBalanced && RichtigGerateneFarben.Count == Farben.Length;
+			StatusText = SpielGewonnen
+				? "Gewonnen! Alle Steine sind platziert, die Hauptwaage ist ausgeglichen und alle Gewichte wurden richtig geraten."
+				: "Verloren. Alle Steine sind platziert, aber die Hauptwaage ist nicht ausgeglichen oder nicht alle Gewichte wurden richtig geraten.";
+			return;
+		}
+
+		if (Manager.NaechsteGruppe())
+		{
+			StatusText = isBalanced
+				? $"{group.Name} beendet den Zug. Die Hauptwaage ist ausgeglichen. Die Waagen bleiben liegen; {Manager.HoleAktuelleGruppe().Name} ist jetzt dran."
+				: $"{group.Name} beendet den Zug. Die Waagen bleiben liegen; {Manager.HoleAktuelleGruppe().Name} ist jetzt dran.";
 		}
 		else
 		{
-			StatusText = "Noch kein Treffer. Nur die Hauptwaage kann die Lösung bestätigen.";
+			StatusText = isBalanced
+				? "Alle Gruppen waren an der Reihe. Die Hauptwaage ist ausgeglichen."
+				: "Alle Gruppen waren an der Reihe. Starte eine neue Partie für einen weiteren Durchgang.";
 		}
 	}
 
 	private void ResetGame()
 	{
-		Manager.Gruppen.Clear();
-		for (var number = 1; number <= 3; number++)
-		{
-			Manager.Gruppen.Add(new Gruppe(number));
-		}
-		Manager.AktuelleGruppe = 0;
+		SpielGestartet = false;
+		Manager = new SpielManager(AnzahlGruppen);
 		ClearScales();
 		SelectedStone = null;
-		StatusText = "Neue Partie gestartet. Wähle einen Stein aus.";
+		SpielBeendet = false;
+		SpielGewonnen = false;
+		RichtigGerateneFarben.Clear();
+		GewichteRatenSichtbar = false;
+		StatusText = "Wähle die Gruppen und starte eine neue Partie.";
 	}
 
 	private void ClearScales()
@@ -204,7 +328,54 @@
 
 	private int VerbleibendeSteine() => Manager.HoleAktuelleGruppe().Steine.Count(stone => !stone.Platziert);
 
-	private bool CanEvaluate => Waagen.Sum(scale => scale.LinkeSeite.Count + scale.RechteSeite.Count) >= 2;
+	private bool CanEvaluate => Manager.HoleAktuelleGruppe().Steine.Count(stone => stone.Platziert) >= 2 || CanGuessWeights;
+
+	private bool CanGuessWeights => Waagen[0].LinkeSeite.Count + Waagen[0].RechteSeite.Count > 0
+		&& Waagen[0].GewichtLinks() == Waagen[0].GewichtRechts();
+
+	private bool AlleSteinePlatziert() => Manager.Gruppen.SelectMany(group => group.Steine).All(stone => stone.Platziert);
+
+	private void ShowWeightGuess()
+	{
+		GewichteRatenSichtbar = true;
+		foreach (var color in Farben)
+		{
+			GewichtsTipps[color] = 0;
+		}
+		GewichtsErgebnis = string.Empty;
+		StatusText = "Die Hauptwaage ist ausgeglichen. Trage die vermuteten Farbgewichte ein.";
+	}
+
+	private void CheckWeightGuess()
+	{
+		var fehlendeFarben = Farben.Where(color => !GewichtsTipps.TryGetValue(color, out var guess) || guess <= 0).ToList();
+		if (fehlendeFarben.Count > 0)
+		{
+			GewichtsErgebnis = $"Bitte gib noch ein Gewicht für {string.Join(", ", fehlendeFarben)} ein.";
+			StatusText = "Die Gewichtsangaben sind noch unvollständig.";
+			return;
+		}
+
+		var richtigeFarben = Farben.Where(color =>
+			Manager.Gruppen.SelectMany(group => group.Steine)
+				.Where(stone => stone.Farbe == color)
+				.All(stone => stone.Gewicht == GewichtsTipps[color])).ToList();
+		foreach (var color in richtigeFarben)
+		{
+			RichtigGerateneFarben.Add(color);
+		}
+
+		if (RichtigGerateneFarben.Count == Farben.Length)
+		{
+			GewichtsErgebnis = "Richtig! Alle fünf Farbgewichte wurden erraten.";
+			StatusText = "Richtig! Alle Gewichte wurden korrekt erraten.";
+		}
+		else
+		{
+			GewichtsErgebnis = $"Noch nicht vollständig richtig: {richtigeFarben.Count} von {Farben.Length} Gewichten stimmen in diesem Versuch. Insgesamt richtig geraten: {RichtigGerateneFarben.Count} von {Farben.Length}.";
+			StatusText = "Einige Gewichte stimmen noch nicht. Versuche es erneut.";
+		}
+	}
 
 	private bool IstHauptwaagenKombinationGueltig(bool left)
 	{
@@ -238,4 +409,8 @@
 	}
 
 	private static string StoneClass(Stein stone) => stone.Farbe.ToLowerInvariant();
+
+	private static string SteinHinweis(Stein stone) => stone.Farbe == "Gelb"
+		? "10"
+		: stone.Platziert ? "platziert" : "unbekannt";
 }
