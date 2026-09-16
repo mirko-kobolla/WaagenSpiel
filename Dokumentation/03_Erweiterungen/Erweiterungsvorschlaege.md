@@ -103,3 +103,47 @@ Für den Unterricht wäre zusätzlich sinnvoll, zwischen verschiedenen Auswertun
 ## 8. Auswertung nach einer richtigen Gewichtsabfrage
 
 Nach einer vollständig richtigen Gewichtsabfrage könnte eine Abschlussübersicht erscheinen. Sie zeigt die Farben, die erratenen Gewichte, die benötigten Versuche und die beteiligten Gruppen. So wird aus dem gemeinsamen Waagenstand eine nachvollziehbare mathematische Auswertung.
+
+## 9. Spielstand nach jeder Runde anzeigen
+
+Nach jeder abgeschlossenen Runde soll ein eigener Spielstandsbildschirm erscheinen. Er zeigt übersichtlich, welche Gruppen am Spiel teilnehmen und welche Steine den Gruppen noch zur Verfügung stehen.
+
+Die Übersicht sollte mindestens enthalten:
+
+| Gruppe | Steine der Gruppe | Status |
+|---|---|---|
+| Name der Gruppe | verfügbare oder bereits gespielte Farben bzw. Stein-IDs | aktiv / ausgeschieden / fertig |
+
+Verfügbare, bereits platzierte und nicht mehr nutzbare Steine müssen eindeutig voneinander unterschieden werden. Die Anzeige bleibt bestehen, bis die Spielleitung oder die nächste Gruppe bestätigt, dass es weitergeht. So können alle Beteiligten den gemeinsamen Spielstand nachvollziehen und es ist klar, welche Gruppe als Nächstes an der Reihe ist.
+
+## 10. Hinweis zur gelben Farbe ab Spielbeginn
+
+Direkt ab dem Start des Spiels soll oben auf dem Spielfeld ein gut sichtbarer Hinweis stehen:
+
+> Von den fünf Steinen ist Gelb der drittschwerste Stein. Er wiegt 10 g.
+
+Der Hinweis bleibt während des gesamten Spiels sichtbar, damit die Information nicht verloren geht. Die Darstellung sollte nicht nur über die Farbe erfolgen, sondern zusätzlich den Namen des Steins und sein Gewicht nennen. Dadurch ist die Information auch bei einer eingeschränkten Farbwahrnehmung verständlich.
+
+Die Formulierung muss sich an die tatsächlich gewählte Spielkonfiguration anpassen. Sie darf nur angezeigt werden, wenn es genau fünf Steine gibt und Gelb in diesem Spiel tatsächlich der drittschwerste Stein mit einem Gewicht von 10 g ist. Bei anderen Einstellungen muss das Programm entweder einen passenden Hinweis erzeugen oder den Hinweis ausblenden.
+
+## 11. Endbildschirm bei Spielende
+
+Wenn das Spiel nicht weitergespielt werden kann, soll automatisch ein eigener Endbildschirm erscheinen. Er ersetzt die normale Spielansicht und macht das Ergebnis auch aus einiger Entfernung eindeutig sichtbar.
+
+Im Mittelpunkt steht eine große Ergebnisnachricht:
+
+- **Gewonnen!** Wenn die Spielbedingungen erfüllt und die Gewichte richtig bestimmt wurden.
+- **Verloren!** Wenn keine gültigen Züge mehr möglich sind oder das Spielziel nicht erreicht wurde.
+
+Unter der Ergebnisnachricht können die beteiligten Gruppen, ihre Steine und eine kurze Begründung angezeigt werden. Zusätzlich ist ein Neustart möglich. Die exakten Gewichte sollten nur dann eingeblendet werden, wenn die Runde endgültig beendet ist oder die Auswertung dies ausdrücklich vorsieht.
+
+## Beschreibung der Änderungen
+
+Für die Umsetzung ergeben sich folgende Änderungen:
+
+1. Nach jeder Runde wird der aktuellen Spielansicht ein bestätigbarer Spielstandsbildschirm vorgeschaltet.
+2. Der Spielstand benötigt pro Gruppe den Namen, die zugehörigen Steine und den aktuellen Status. Die Steinliste wird nach jedem Zug aktualisiert.
+3. Beim Start wird geprüft, ob die konfigurierte Steinanzahl zum festen Hinweis passt. Der Hinweis zur gelben Farbe wird oben im Spielfeld angezeigt und bleibt während der Runde sichtbar.
+4. Die Spiellogik erkennt, wann kein gültiger Zug mehr möglich ist oder das Spielziel erreicht wurde, und beendet die Runde kontrolliert.
+5. Beim Spielende wird abhängig vom Ergebnis ein deutlich gestalteter Gewinn- oder Verlustbildschirm geöffnet. Die normale Zugauswahl ist dort nicht mehr aktiv.
+6. Die bestehenden Gruppen- und Abschlussübersichten werden um die verfügbaren, gespielten und nicht mehr nutzbaren Steine ergänzt.

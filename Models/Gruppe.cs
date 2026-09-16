@@ -13,7 +13,7 @@ namespace WaagenSpiel.Models
 
         public bool Ausgeschieden { get; set; }
 
-        public Gruppe(int nummer, string? name = null)
+        public Gruppe(int nummer, string name = null)
         {
             Nummer = nummer;
             Name = string.IsNullOrWhiteSpace(name) ? $"Gruppe {nummer}" : name;

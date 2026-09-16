@@ -38,7 +38,7 @@ namespace WaagenSpiel
         private void ZeigeAktuelleGruppe()
         {
             Gruppe gruppe = spielManager.HoleAktuelleGruppe();
-            GruppenText.Text = $"Gruppe {gruppe.Nummer} ist an der Reihe";
+            GruppenText.Text = $"{gruppe.Name} ist an der Reihe";
             SteinnePanel.Children.Clear();
             foreach (Stein stein in gruppe.Steine)
             {
@@ -76,10 +76,17 @@ namespace WaagenSpiel
 
         private void NaechsteGruppe_Click(object sender, RoutedEventArgs e)
         {
+            Gruppe aktuelleGruppe = spielManager.HoleAktuelleGruppe();
             if (spielManager.NaechsteGruppe())
             {
                 ZeigeAktuelleGruppe();
+                RundenText.Text = $"Runde: {spielManager.AktuelleGruppe + 1}";
                 StatusText.Text = "Nächste Gruppe ist an der Reihe.";
+                ZeigeSpielstand();
+            }
+            else
+            {
+                ZeigeEndbildschirm(false, "Keine spielbereite Gruppe ist mehr vorhanden.");
             }
         }
 
@@ -94,13 +101,69 @@ namespace WaagenSpiel
             {
                 ZeigeAktuelleGruppe();
                 StatusText.Text = "Gruppe " + gruppe.Nummer + " ist ausgeschieden.";
+                ZeigeSpielstand();
             }
             else
             {
-                // Keine weitere Gruppe verfügbar: UI zurücksetzen
-                SteinnePanel.Children.Clear();
-                StatusText.Text = "Keine weitere Gruppe kann spielen. Spiel beendet.";
+                ZeigeEndbildschirm(false, "Alle Gruppen sind ausgeschieden. Das Spiel ist beendet.");
             }
+        }
+
+        private void ZeigeSpielstand()
+        {
+            SpielstandPanel.Children.Clear();
+
+            foreach (Gruppe gruppe in spielManager.Gruppen)
+            {
+                string verfuegbareSteine = string.Join(", ", gruppe.Steine
+                    .Where(stein => !stein.Platziert)
+                    .Select(stein => stein.Farbe));
+                string gespielteSteine = string.Join(", ", gruppe.Steine
+                    .Where(stein => stein.Platziert)
+                    .Select(stein => stein.Farbe));
+
+                if (string.IsNullOrEmpty(verfuegbareSteine))
+                    verfuegbareSteine = "keine";
+                if (string.IsNullOrEmpty(gespielteSteine))
+                    gespielteSteine = "keine";
+
+                string status = gruppe.Ausgeschieden
+                    ? "ausgeschieden"
+                    : gruppe.Steine.All(stein => stein.Platziert) ? "fertig" : "aktiv";
+
+                TextBlock zeile = new TextBlock
+                {
+                    Text = $"{gruppe.Name}: {status}\n  Verfügbar: {verfuegbareSteine}\n  Gespielt: {gespielteSteine}",
+                    FontSize = 16,
+                    Margin = new Thickness(0, 0, 0, 12),
+                    Foreground = new SolidColorBrush(Color.FromRgb(44, 62, 80))
+                };
+                SpielstandPanel.Children.Add(zeile);
+            }
+
+            SpielstandOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void SpielstandWeiter_Click(object sender, RoutedEventArgs e)
+        {
+            SpielstandOverlay.Visibility = Visibility.Collapsed;
+        }
+
+        private void ZeigeEndbildschirm(bool gewonnen, string begruendung)
+        {
+            EndergebnisText.Text = gewonnen ? "GEWONNEN!" : "VERLOREN!";
+            EndergebnisText.Foreground = gewonnen
+                ? new SolidColorBrush(Color.FromRgb(39, 174, 96))
+                : new SolidColorBrush(Color.FromRgb(192, 57, 43));
+            EndebegruendungText.Text = begruendung;
+            SpielstandOverlay.Visibility = Visibility.Collapsed;
+            EndbildschirmOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void NeuesSpiel_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+            Application.Current.MainWindow.Show();
         }
         private void HauptwaagenLinks_Click(object sender, RoutedEventArgs e)
         {
@@ -186,6 +249,11 @@ namespace WaagenSpiel
             AktualisiereWaagenStatus();
             StatusText.Text =
                 $"{stein.Farbe} wurde platziert";
+
+            if (spielManager.IstSpielGewonnen())
+            {
+                ZeigeEndbildschirm(true, $"{spielManager.HoleAktuelleGruppe().Name} hat alle Steine platziert.");
+            }
         }
 
         private void AktualisiereWaagenAnzeige()

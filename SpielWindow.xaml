@@ -30,6 +30,10 @@
                 <DropShadowEffect BlurRadius="10" Color="#000000" Opacity="0.05" ShadowDepth="1"/>
             </Border.Effect>
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -37,6 +41,7 @@
 
                 <TextBlock x:Name="GruppenText"
                            Text="Gruppe 1 ist an der Reihe"
+                           Grid.Row="0"
                            FontSize="24"
                            FontWeight="SemiBold"
                            Foreground="#2C3E50"
@@ -44,11 +49,21 @@
 
                 <TextBlock x:Name="RundenText"
                            Grid.Column="1"
+                           Grid.Row="0"
                            Text="Runde: 1"
                            FontSize="20"
                            FontWeight="Medium"
                            Foreground="#7F8C8D"
                            VerticalAlignment="Center"/>
+
+                <TextBlock x:Name="HinweisText"
+                           Grid.Row="1"
+                           Grid.ColumnSpan="2"
+                           Text="Von den fünf Steinen ist Gelb der drittschwerste Stein. Er wiegt 10 g."
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="#B05A00"
+                           Margin="0,10,0,0"/>
             </Grid>
         </Border>
 
@@ -267,6 +282,74 @@
             </StackPanel>
         </GroupBox>
 
+        <!-- ================= SPIELSTAND NACH EINER RUNDE ================= -->
+        <Grid x:Name="SpielstandOverlay"
+              Grid.Row="0"
+              Grid.RowSpan="4"
+              Panel.ZIndex="10"
+              Background="#99000000"
+              Visibility="Collapsed">
+            <Border Background="White"
+                    CornerRadius="10"
+                    Padding="28"
+                    MaxWidth="760"
+                    MaxHeight="600"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Text="Spielstand nach der Runde"
+                               FontSize="30"
+                               FontWeight="Bold"
+                               Foreground="#2C3E50"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,18"/>
+                    <StackPanel x:Name="SpielstandPanel"/>
+                    <Button Content="WEITER"
+                            Width="170"
+                            Height="45"
+                            FontWeight="Bold"
+                            HorizontalAlignment="Center"
+                            Margin="0,20,0,0"
+                            Click="SpielstandWeiter_Click"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ================= ENDBILDSCHIRM ================= -->
+        <Grid x:Name="EndbildschirmOverlay"
+              Grid.Row="0"
+              Grid.RowSpan="4"
+              Panel.ZIndex="11"
+              Background="#CC102A43"
+              Visibility="Collapsed">
+            <Border Background="White"
+                    CornerRadius="12"
+                    Padding="42"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <StackPanel>
+                    <TextBlock x:Name="EndergebnisText"
+                               FontSize="52"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,16"/>
+                    <TextBlock x:Name="EndebegruendungText"
+                               FontSize="19"
+                               TextWrapping="Wrap"
+                               MaxWidth="560"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               Foreground="#34495E"/>
+                    <Button Content="NEUES SPIEL"
+                            Width="190"
+                            Height="48"
+                            FontWeight="Bold"
+                            HorizontalAlignment="Center"
+                            Margin="0,26,0,0"
+                            Click="NeuesSpiel_Click"/>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using WaagenSpiel.Models;
 
 namespace WaagenSpiel.Spiel
@@ -30,8 +31,28 @@ namespace WaagenSpiel.Spiel
             if (Gruppen.Count == 0)
                 return false;
 
-            AktuelleGruppe = (AktuelleGruppe + 1) % Gruppen.Count;
-            return true;
+            for (int offset = 1; offset <= Gruppen.Count; offset++)
+            {
+                int naechsterIndex = (AktuelleGruppe + offset) % Gruppen.Count;
+                if (!Gruppen[naechsterIndex].Ausgeschieden)
+                {
+                    AktuelleGruppe = naechsterIndex;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool IstSpielGewonnen()
+        {
+            return Gruppen.Any(gruppe =>
+                !gruppe.Ausgeschieden && gruppe.Steine.All(stein => stein.Platziert));
+        }
+
+        public bool IstSpielVerloren()
+        {
+            return Gruppen.Count > 0 && Gruppen.All(gruppe => gruppe.Ausgeschieden);
         }
     }
 }
