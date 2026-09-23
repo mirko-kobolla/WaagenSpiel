@@ -34,7 +34,7 @@ namespace WaagenSpiel.Spiel
             for (int offset = 1; offset <= Gruppen.Count; offset++)
             {
                 int naechsterIndex = (AktuelleGruppe + offset) % Gruppen.Count;
-                if (!Gruppen[naechsterIndex].Ausgeschieden)
+                if (KannSpielen(Gruppen[naechsterIndex]))
                 {
                     AktuelleGruppe = naechsterIndex;
                     return true;
@@ -44,10 +44,17 @@ namespace WaagenSpiel.Spiel
             return false;
         }
 
+        private bool KannSpielen(Gruppe gruppe)
+        {
+            return !gruppe.Ausgeschieden && gruppe.Steine.Any(stein => !stein.Platziert);
+        }
+
         public bool IstSpielGewonnen()
         {
-            return Gruppen.Any(gruppe =>
-                !gruppe.Ausgeschieden && gruppe.Steine.All(stein => stein.Platziert));
+            return Gruppen.Count > 0 &&
+                Gruppen.Any(gruppe => !gruppe.Ausgeschieden) &&
+                Gruppen.Where(gruppe => !gruppe.Ausgeschieden)
+                    .All(gruppe => gruppe.Steine.All(stein => stein.Platziert));
         }
 
         public bool IstSpielVerloren()

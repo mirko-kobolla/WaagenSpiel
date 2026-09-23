@@ -76,7 +76,6 @@ namespace WaagenSpiel
 
         private void NaechsteGruppe_Click(object sender, RoutedEventArgs e)
         {
-            Gruppe aktuelleGruppe = spielManager.HoleAktuelleGruppe();
             if (spielManager.NaechsteGruppe())
             {
                 ZeigeAktuelleGruppe();
@@ -86,7 +85,11 @@ namespace WaagenSpiel
             }
             else
             {
-                ZeigeEndbildschirm(false, "Keine spielbereite Gruppe ist mehr vorhanden.");
+                ZeigeEndbildschirm(
+                    spielManager.IstSpielGewonnen(),
+                    spielManager.IstSpielGewonnen()
+                        ? "Alle Gruppen haben ihre Steine platziert."
+                        : "Keine spielbereite Gruppe ist mehr vorhanden.");
             }
         }
 
@@ -250,10 +253,6 @@ namespace WaagenSpiel
             StatusText.Text =
                 $"{stein.Farbe} wurde platziert";
 
-            if (spielManager.IstSpielGewonnen())
-            {
-                ZeigeEndbildschirm(true, $"{spielManager.HoleAktuelleGruppe().Name} hat alle Steine platziert.");
-            }
         }
 
         private void AktualisiereWaagenAnzeige()

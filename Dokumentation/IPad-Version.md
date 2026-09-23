@@ -491,3 +491,164 @@ In dieser Version wurden folgende Punkte umgesetzt:
 - Vor dem Spielstart koennen Anzahl und Namen der Gruppen festgelegt werden.
 - Der Hinweistext erklaert, dass `Neue Partie` alle Gruppen zuruecksetzt.
 - Die iPhone-Verbindungsprobleme wurden als Netzwerk-/Firewall-Schritte dokumentiert.
+
+## 19. Website aktualisieren
+
+Eine Aenderung im Quellcode ist erst auf der Website sichtbar, wenn die Webversion neu gestartet oder neu veroeffentlicht wurde. Die WPF-Desktopversion und die iPad-Webversion werden getrennt gebaut.
+
+### 19.1 Lokalen Testserver aktualisieren
+
+Wenn die Website ueber den lokalen Entwicklungsserver auf dem Laptop laeuft:
+
+1. Die Aenderungen speichern, zum Beispiel in `IPadVersion/Pages/Home.razor` oder in einer gemeinsam verwendeten Datei wie `Spiel/SpielManager.cs`.
+2. Den laufenden Server im PowerShell-Fenster mit `Strg+C` beenden.
+3. Den Server im Repository-Ordner erneut starten:
+
+```powershell
+dotnet run --project .\IPadVersion\IPadVersion.csproj --urls http://0.0.0.0:5187
+```
+
+4. Auf dem Laptop die lokale Adresse neu laden:
+
+```text
+http://localhost:5187
+```
+
+5. Auf dem iPad oder iPhone die Adresse mit der Laptop-IP erneut oeffnen:
+
+```text
+http://LAPTOP-IP:5187
+```
+
+Falls weiterhin die alte Version erscheint, Safari beziehungsweise den Browser vollstaendig schliessen und die Seite erneut laden. Bei einer installierten PWA sollte das App-Fenster ebenfalls geschlossen und neu geoeffnet werden.
+
+### 19.2 Neue Webversion veroeffentlichen
+
+Fuer eine bereits gehostete Website muss zuerst ein neues Release-Paket erstellt werden. Im Repository-Ordner ausfuehren:
+
+```powershell
+dotnet restore .\IPadVersion\IPadVersion.csproj
+dotnet publish .\IPadVersion\IPadVersion.csproj -c Release -o .\IPadVersion\publish
+```
+
+Danach den **Inhalt** des Ordners `IPadVersion/publish/wwwroot/` auf den Webserver kopieren. Die vorhandenen Dateien der Website muessen dabei ersetzt werden. Der Webserver muss weiterhin auf `index.html` als Einstiegspunkt zeigen.
+
+Nach dem Upload:
+
+1. Die Website im Browser mit `Strg+F5` neu laden.
+2. Auf dem iPad Safari komplett schliessen und die Website erneut oeffnen.
+3. Bei einer installierten PWA das Symbol vom Home-Bildschirm schliessen und danach neu starten.
+4. Falls noch alte Dateien verwendet werden, die Website-Daten beziehungsweise den Website-Cache in den Safari-Einstellungen loeschen und die Seite erneut laden.
+
+Der Grund fuer das notwendige Neuladen ist der Service Worker. Er kann die alte Webversion zwischenspeichern, damit sie offline funktioniert. Nach einem neuen Release werden die neuen Dateien normalerweise beim naechsten Laden uebernommen; ein manuelles Schliessen und erneutes Oeffnen beschleunigt diesen Vorgang.
+
+### 19.3 Welche Datei muss geaendert werden?
+
+- Bedienoberflaeche und Web-Spielablauf: `IPadVersion/Pages/Home.razor`
+- Web-Layout und Farben: `IPadVersion/wwwroot/css/app.css`
+- Gemeinsame Gruppen- und Wechsel-Logik: `Spiel/SpielManager.cs`
+- Gemeinsame Modelle und Waagen: `Models/Gruppe.cs`, `Models/Stein.cs`, `Models/Waage.cs`
+
+Nach einer Aenderung an einer gemeinsam verwendeten Datei muessen sowohl die WPF-Version als auch die iPad-Webversion getestet werden. Fuer die Website ist anschliessend immer ein neuer `dotnet publish`-Vorgang erforderlich.
+
+### 19.4 Kurzbefehl fuer ein Website-Update
+
+```powershell
+dotnet publish .\IPadVersion\IPadVersion.csproj -c Release -o .\IPadVersion\publish
+```
+
+Anschliessend den Inhalt von `IPadVersion/publish/wwwroot/` auf den Webserver hochladen und die Website auf dem Zielgeraet neu laden. Der Ordner `IPadVersion/publish/` selbst muss nicht als zusaetzliche Verzeichnisebene auf dem Webserver angelegt werden.
+
+## 20. Website ueber GitHub aktualisieren
+
+Wenn die Website ueber ein GitHub-Repository veroeffentlicht wird, reicht es nicht, die Dateien nur auf dem eigenen Laptop zu aendern. Die Aenderungen muessen in das Repository hochgeladen werden. Danach erstellt GitHub die Website neu, sofern GitHub Pages oder ein GitHub-Actions-Workflow eingerichtet ist.
+
+### 20.1 Aenderungen pruefen
+
+Im Repository-Ordner zuerst den aktuellen Branch und die offenen Aenderungen anzeigen:
+
+```powershell
+git branch --show-current
+git status
+```
+
+Bei der iPad-Version sollte der Branch verwendet werden, der in GitHub fuer die Website eingerichtet ist, zum Beispiel `IPad-Version`. Der Branchname muss mit dem Branch uebereinstimmen, den GitHub Pages oder der Actions-Workflow verwendet.
+
+Vor dem Hochladen die Webversion lokal testen:
+
+```powershell
+dotnet build .\IPadVersion\IPadVersion.csproj
+dotnet run --project .\IPadVersion\IPadVersion.csproj --urls http://0.0.0.0:5187
+```
+
+### 20.2 Aenderungen nach GitHub hochladen
+
+Wenn die lokale Version funktioniert, die Dateien speichern und in Git hochladen:
+
+```powershell
+git add .
+git commit -m "Gruppenrundlauf der iPad-Version aktualisieren"
+git push origin IPad-Version
+```
+
+Falls der aktuelle Branch anders heisst, den Namen bei `git push` ersetzen. Der aktuelle Branch kann jederzeit mit diesem Befehl geprueft werden:
+
+```powershell
+git branch --show-current
+```
+
+Beim ersten Push eines lokalen Branches kann GitHub einen Login oder einen Personal Access Token verlangen. Das Passwort des GitHub-Kontos wird bei Git-Operationen normalerweise nicht mehr akzeptiert; ein Personal Access Token wird wie ein Passwort eingegeben und nicht im Projekt gespeichert.
+
+### 20.3 Pruefen, ob GitHub die Website baut
+
+Nach `git push` auf GitHub:
+
+1. Das Repository auf GitHub oeffnen.
+2. Zum Bereich **Actions** wechseln.
+3. Den neuesten Workflow-Lauf oeffnen.
+4. Warten, bis alle Schritte mit einem gruenen Haken abgeschlossen sind.
+5. Bei einem roten Lauf die Fehlermeldung oeffnen. Die Website wurde dann noch nicht aktualisiert.
+
+Wenn kein Workflow angezeigt wird, unter **Settings > Pages** pruefen, wie die Website veroeffentlicht wird:
+
+- **GitHub Actions**: Der Push startet normalerweise automatisch den Build und das Deployment.
+- **Deploy from a branch**: GitHub verwendet den ausgewaehlten Branch und Ordner. Die erzeugten Dateien muessen genau dort liegen, zum Beispiel im Ordner `docs` oder in einem eigenen Deployment-Branch.
+
+Bei einer Blazor-WebAssembly-PWA muss fuer GitHub Pages der Inhalt des erzeugten Ordners `IPadVersion/publish/wwwroot/` veroeffentlicht werden. Nur die Quelldateien im Ordner `IPadVersion` reichen fuer eine fertige Website nicht aus, wenn kein Actions-Workflow den Publish-Schritt uebernimmt.
+
+### 20.4 Wenn GitHub Actions automatisch veroeffentlicht
+
+Wenn im Repository bereits ein Workflow fuer GitHub Pages vorhanden ist, genuegt normalerweise:
+
+```powershell
+git add .
+git commit -m "Website aktualisieren"
+git push origin IPad-Version
+```
+
+GitHub fuehrt danach automatisch `dotnet publish` aus und veroeffentlicht die neuen Dateien. Der genaue Ablauf steht in `.github/workflows/`. Aenderungen an `Home.razor`, `SpielManager.cs` oder den CSS-Dateien werden dadurch mit dem naechsten erfolgreichen Workflow-Lauf Bestandteil der Website.
+
+### 20.5 Wenn die Website trotz erfolgreichem Push alt bleibt
+
+Nach einem erfolgreichen GitHub-Actions-Lauf:
+
+1. Die GitHub-Pages-Adresse mit `Strg+F5` neu laden.
+2. Auf dem iPad Safari komplett schliessen und die Seite erneut oeffnen.
+3. Bei einer installierten PWA das App-Fenster schliessen und das Symbol erneut starten.
+4. Falls die alte Version bleibt, die Website-Daten beziehungsweise den Safari-Cache loeschen.
+5. Unter **Actions** pruefen, ob wirklich der richtige Branch gebaut wurde.
+
+Der Service Worker kann alte Dateien zwischenspeichern. Deshalb kann es nach einem erfolgreichen Deployment kurz dauern, bis alle Dateien auf dem Zielgeraet aktualisiert sind.
+
+### 20.6 Kurzablauf fuer GitHub
+
+```powershell
+git status
+git branch --show-current
+dotnet build .\IPadVersion\IPadVersion.csproj
+git add .
+git commit -m "Website aktualisieren"
+git push origin IPad-Version
+```
+
+Danach den Lauf unter **GitHub > Actions** kontrollieren und die Website auf dem iPad oder iPhone neu laden. Der Spielstand bleibt bei diesem Update nicht automatisch erhalten, wenn die Seite neu geladen oder die PWA neu gestartet wird. Die Aenderung aktualisiert den Programmcode, nicht eine dauerhafte Spielstandspeicherung.
