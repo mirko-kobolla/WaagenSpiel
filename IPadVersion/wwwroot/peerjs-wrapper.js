@@ -6,12 +6,14 @@ window.waagenPeer = {
 
     async createHost(dotnetReference) {
         this.dotnet = dotnetReference;
-        this.peer = new Peer();
+        const roomCode = this.createRoomCode();
+        this.roomCode = roomCode;
+        this.peer = new Peer(roomCode);
 
         this.peer.on('open', peerId => {
             dotnetReference.invokeMethodAsync('OnPeerEvent', JSON.stringify({
                 type: 'host-ready',
-                peerId
+                peerId: peerId.toUpperCase()
             }));
         });
 
@@ -50,7 +52,7 @@ window.waagenPeer = {
         this.peer = new Peer();
 
         this.peer.on('open', () => {
-            this.hostConnection = this.peer.connect(hostId, { reliable: true });
+            this.hostConnection = this.peer.connect(hostId.trim().toUpperCase(), { reliable: true });
 
             this.hostConnection.on('open', () => {
                 dotnetReference.invokeMethodAsync('OnPeerEvent', JSON.stringify({
@@ -121,5 +123,13 @@ window.waagenPeer = {
         } catch {
             return payload;
         }
+    },
+
+    createRoomCode() {
+        const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        const randomValues = new Uint32Array(6);
+        crypto.getRandomValues(randomValues);
+
+        return Array.from(randomValues, value => alphabet[value % alphabet.length]).join('');
     }
 };
