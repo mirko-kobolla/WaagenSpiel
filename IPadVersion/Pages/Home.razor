@@ -216,7 +216,7 @@ else
 
 		<section class="action-row">
 			<button class="primary-action" disabled="@(!CanEvaluate || SpielBeendet)" @onclick="EvaluateGame">Zug beenden <span>→</span></button>
-			@if (CanGuessWeights && !SpielBeendet)
+			@if (PeerMode != "join" && CanGuessWeights && !SpielBeendet)
 			{
 				<button class="secondary-action" type="button" @onclick="ShowWeightGuess">Gewichte raten</button>
 			}
@@ -753,6 +753,11 @@ else
 
 	private void ShowWeightGuess()
 	{
+		if (PeerMode == "join")
+		{
+			return;
+		}
+
 		GewichteRatenSichtbar = true;
 		foreach (var color in Farben)
 		{
@@ -764,6 +769,11 @@ else
 
 	private void CheckWeightGuess()
 	{
+		if (PeerMode == "join")
+		{
+			return;
+		}
+
 		var fehlendeFarben = Farben.Where(color => !GewichtsTipps.TryGetValue(color, out var guess) || guess <= 0).ToList();
 		if (fehlendeFarben.Count > 0)
 		{
