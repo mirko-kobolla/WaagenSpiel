@@ -1,4 +1,6 @@
 ﻿@page "/"
+@inject IJSRuntime JS
+@using System.Text.Json
 
 <PageTitle>Waagenspiel | iPad-Version</PageTitle>
 
@@ -10,28 +12,113 @@
 			<h1>Waagenspiel</h1>
 			<p class="subtitle">Richtet die gemeinsame Partie ein, bevor der erste Zug beginnt.</p>
 
-			<div class="setup-field">
-				<label for="group-count">Anzahl der Gruppen</label>
-				<select id="group-count" @bind="AnzahlGruppen" @bind:after="GruppenanzahlGeaendert">
-					@for (var count = 2; count <= 8; count++)
+			<div class="mode-choice" role="radiogroup" aria-label="Spielmodus">
+				<button type="button" class="mode-card @(PeerMode == "local" ? "selected" : "")" @onclick='() => SetPeerMode("local")'>
+					<strong>Ein Gerät</strong>
+					<span>Alle Teams spielen gemeinsam auf diesem Gerät.</span>
+				</button>
+				<button type="button" class="mode-card @(PeerMode == "host" || PeerMode == "join" ? "selected" : "")" @onclick='() => SetPeerMode("host")'>
+					<strong>Mehrere Geräte</strong>
+					<span>Teams verbinden sich über PeerJS.</span>
+				</button>
+			</div>
+
+			@if (PeerMode == "local")
+			{
+				<div class="setup-field">
+					<label for="group-count">Anzahl der Gruppen</label>
+					<select id="group-count" @bind="AnzahlGruppen" @bind:after="GruppenanzahlGeaendert">
+						@for (var count = 2; count <= 8; count++)
+						{
+							<option value="@count">@count Gruppen</option>
+						}
+					</select>
+				</div>
+
+				<div class="group-name-list">
+					@for (var index = 0; index < AnzahlGruppen; index++)
 					{
-						<option value="@count">@count Gruppen</option>
+						var groupIndex = index;
+						<div class="setup-field">
+							<label for="group-@groupIndex">Name der Gruppe @(groupIndex + 1)</label>
+							<input id="group-@groupIndex" @bind="Gruppennamen[groupIndex]" maxlength="30" />
+						</div>
 					}
-				</select>
-			</div>
+				</div>
 
-			<div class="group-name-list">
-				@for (var index = 0; index < AnzahlGruppen; index++)
+				<button class="primary-action start-action" @onclick="StartGame">Partie starten <span>→</span></button>
+			}
+			else
+			{
+				<div class="peer-choice">
+					<button type="button" class="secondary-action @(PeerMode == "host" ? "selected" : "")" @onclick='() => SetPeerMode("host")'>Raum erstellen</button>
+					<button type="button" class="secondary-action @(PeerMode == "join" ? "selected" : "")" @onclick='() => SetPeerMode("join")'>Raum beitreten</button>
+				</div>
+
+				@if (PeerMode == "host")
 				{
-					var groupIndex = index;
-					<div class="setup-field">
-						<label for="group-@groupIndex">Name der Gruppe @(groupIndex + 1)</label>
-						<input id="group-@groupIndex" @bind="Gruppennamen[groupIndex]" maxlength="30" />
-					</div>
+					@if (string.IsNullOrWhiteSpace(PeerRoomId))
+					{
+						<div class="setup-field">
+							<label for="host-name">Name der Spielleitung</label>
+							<input id="host-name" @bind="PeerTeamName" maxlength="30" placeholder="z. B. Moderation" />
+						</div>
+						<button class="primary-action start-action" @onclick="CreatePeerRoom">Peer-Raum erstellen <span>→</span></button>
+					}
+					else
+					{
+						<div class="room-code">
+							<span>Raum-ID</span>
+							<strong>@PeerRoomId</strong>
+						</div>
+						<div class="peer-lobby">
+							<h2>Verbundene Teams</h2>
+							@if (LobbyTeams.Count == 0)
+							{
+								<p class="subtitle">Noch wartet kein Team.</p>
+							}
+							@foreach (var team in LobbyTeams)
+							{
+								<div class="lobby-team">
+									<strong>@team.Name</strong>
+									<span>@string.Join(", ", team.Weights.Select(weight => $"{weight.Key}: {weight.Value}"))</span>
+								</div>
+							}
+						</div>
+						<button class="primary-action start-action" disabled="@(LobbyTeams.Count == 0)" @onclick="StartPeerGame">
+							Peer-Partie starten <span>→</span>
+						</button>
+					}
 				}
-			</div>
-
-			<button class="primary-action start-action" @onclick="StartGame">Partie starten <span>→</span></button>
+				else
+				{
+					<div class="setup-field">
+						<label for="room-id">Raum-ID</label>
+						<input id="room-id" @bind="PeerRoomId" maxlength="80" placeholder="Peer-ID aus der Spielleitung" />
+					</div>
+					<div class="setup-field">
+						<label for="team-name">Name des Teams</label>
+						<input id="team-name" @bind="PeerTeamName" maxlength="30" placeholder="Teamname" />
+					</div>
+					<div class="peer-weight-grid">
+						@foreach (var color in Farben)
+						{
+							<label class="guess-field">
+								<span class="mini-stone @color.ToLowerInvariant()">@color</span>
+								<input type="number" min="1" @bind="PeerWeights[color]" @bind:after="SendPeerWeights" />
+								<span>g</span>
+							</label>
+						}
+					</div>
+					<button class="primary-action start-action" disabled="@(PeerJoining || string.IsNullOrWhiteSpace(PeerRoomId) || string.IsNullOrWhiteSpace(PeerTeamName))" @onclick="JoinPeerRoom">
+						Team hinzufügen <span>→</span>
+					</button>
+					@if (!string.IsNullOrWhiteSpace(PeerConnectionStatus))
+					{
+						<p class="guess-result">@PeerConnectionStatus</p>
+					}
+				}
+			}
 		</section>
 	</div>
 }
@@ -81,7 +168,6 @@ else
 									<span class="mini-stone @StoneClass(stone)">@stone.Farbe</span>
 								}
 							</div>
-							<strong>Gewicht verborgen</strong>
 						</div>
 						<div class="pan-divider">vs.</div>
 						<div class="pan">
@@ -92,7 +178,6 @@ else
 									<span class="mini-stone @StoneClass(stone)">@stone.Farbe</span>
 								}
 							</div>
-							<strong>Gewicht verborgen</strong>
 						</div>
 					</div>
 				</article>
@@ -112,7 +197,7 @@ else
 				@foreach (var item in Manager.HoleAktuelleGruppe().Steine.Select((stone, index) => new { stone, index }))
 				{
 					<button class="stone-button @StoneClass(item.stone) @(SelectedStone == item.stone ? "selected" : "")"
-							disabled="@(item.stone.Platziert || SpielBeendet)"
+							disabled="@(item.stone.Platziert || SpielBeendet || !CanControlCurrentTeam)"
 							@onclick="() => SelectStone(item.stone)">
 						<span class="stone-dot"></span>
 						<span>@item.stone.Farbe</span>
@@ -182,6 +267,8 @@ else
 }
 
 @code {
+	[Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+
 	private SpielManager Manager = new(3);
 	private readonly List<Waage> Waagen = new() { new Waage(), new Waage() };
 	private readonly List<string> Gruppennamen = new() { "Gruppe 1", "Gruppe 2", "Gruppe 3" };
@@ -196,6 +283,228 @@ else
 	private string GewichtsErgebnis = string.Empty;
 	private bool SpielBeendet;
 	private bool SpielGewonnen;
+
+	private string PeerMode = "local";
+	private string PeerRoomId = string.Empty;
+	private string PeerTeamName = string.Empty;
+	private string PeerConnectionStatus = string.Empty;
+	private string PeerLocalId = string.Empty;
+	private bool PeerJoining;
+	private int PeerTeamIndex = -1;
+	private DotNetObjectReference<Home>? PeerDotNetReference;
+	private readonly List<LobbyTeam> LobbyTeams = new();
+	private readonly Dictionary<string, int> PeerWeights = new()
+	{
+		["Rot"] = 2,
+		["Lila"] = 7,
+		["Gelb"] = 10,
+		["Blau"] = 16,
+		["Grün"] = 19
+	};
+
+	private void SetPeerMode(string mode)
+	{
+		PeerMode = mode;
+		PeerConnectionStatus = string.Empty;
+		if (mode != "host")
+		{
+			PeerRoomId = string.Empty;
+		}
+	}
+
+	private async Task CreatePeerRoom()
+	{
+		PeerDotNetReference ??= DotNetObjectReference.Create(this);
+		PeerConnectionStatus = "Raum wird erstellt...";
+		await JS.InvokeVoidAsync("waagenPeer.createHost", PeerDotNetReference);
+	}
+
+	private async Task JoinPeerRoom()
+	{
+		PeerJoining = true;
+		PeerConnectionStatus = "Verbindung wird hergestellt...";
+		PeerDotNetReference ??= DotNetObjectReference.Create(this);
+		await JS.InvokeVoidAsync("waagenPeer.joinRoom", PeerRoomId.Trim(), PeerDotNetReference);
+	}
+
+	private async Task SendPeerWeights()
+	{
+		if (PeerMode == "join" && PeerJoining)
+		{
+			await JS.InvokeVoidAsync("waagenPeer.sendToHost", JsonSerializer.Serialize(new PeerMessage
+			{
+				Type = "weights",
+				Weights = PeerWeights
+			}));
+		}
+	}
+
+	[JSInvokable]
+	public async Task OnPeerEvent(string eventJson)
+	{
+		using var document = JsonDocument.Parse(eventJson);
+		var root = document.RootElement;
+		var type = root.GetProperty("type").GetString();
+
+		switch (type)
+		{
+			case "host-ready":
+				PeerRoomId = root.GetProperty("peerId").GetString() ?? string.Empty;
+				PeerConnectionStatus = "Raum bereit.";
+				break;
+			case "joined-ready":
+				PeerLocalId = root.GetProperty("peerId").GetString() ?? string.Empty;
+				await JS.InvokeVoidAsync("waagenPeer.sendToHost", JsonSerializer.Serialize(new PeerMessage
+				{
+					Type = "join",
+					TeamName = PeerTeamName.Trim(),
+					Weights = PeerWeights
+				}));
+				PeerConnectionStatus = "Beitritt gesendet.";
+				break;
+			case "peer-message":
+				if (root.TryGetProperty("payload", out var hostPayload))
+				{
+					await HandlePeerMessage(root.GetProperty("peerId").GetString() ?? string.Empty, hostPayload);
+				}
+				break;
+			case "host-message":
+				if (root.TryGetProperty("payload", out var clientPayload))
+				{
+					await HandleHostMessage(clientPayload);
+				}
+				break;
+			case "peer-disconnected":
+				var disconnectedPeer = root.GetProperty("peerId").GetString();
+				LobbyTeams.RemoveAll(team => team.PeerId == disconnectedPeer);
+				await BroadcastLobby();
+				break;
+			case "host-disconnected":
+				PeerConnectionStatus = "Die Verbindung zur Spielleitung wurde getrennt.";
+				break;
+			case "peer-error":
+				PeerConnectionStatus = root.TryGetProperty("message", out var error)
+					? $"Verbindungsfehler: {error.GetString()}"
+					: "Verbindungsfehler.";
+				PeerJoining = false;
+				break;
+		}
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task HandlePeerMessage(string peerId, JsonElement payload)
+	{
+		var message = payload.Deserialize<PeerMessage>();
+		if (message is null)
+		{
+			return;
+		}
+
+		switch (message.Type)
+		{
+			case "join":
+				var existing = LobbyTeams.FirstOrDefault(team => team.PeerId == peerId);
+				if (existing is null)
+				{
+					LobbyTeams.Add(new LobbyTeam
+					{
+						PeerId = peerId,
+						Name = string.IsNullOrWhiteSpace(message.TeamName) ? $"Team {LobbyTeams.Count + 1}" : message.TeamName,
+						Weights = message.Weights ?? new Dictionary<string, int>(PeerWeights)
+					});
+				}
+				else
+				{
+					existing.Name = message.TeamName ?? existing.Name;
+					existing.Weights = message.Weights ?? existing.Weights;
+				}
+				await BroadcastLobby();
+				break;
+			case "weights":
+				var team = LobbyTeams.FirstOrDefault(item => item.PeerId == peerId);
+				if (team is not null)
+				{
+					team.Weights = message.Weights ?? team.Weights;
+					await BroadcastLobby();
+				}
+				break;
+			case "place":
+				if (SpielGestartet && IsPeerTeamActive(peerId))
+				{
+					SelectedStone = Manager.HoleAktuelleGruppe().Steine
+						.FirstOrDefault(stone => stone.Farbe == message.Color && !stone.Platziert);
+					PlaceSelectedStoneHost(message.ScaleIndex, message.Left);
+					await BroadcastGameState();
+				}
+				break;
+			case "evaluate":
+				if (SpielGestartet && IsPeerTeamActive(peerId))
+				{
+					EvaluateGame();
+					await BroadcastGameState();
+				}
+				break;
+		}
+	}
+
+	private async Task HandleHostMessage(JsonElement payload)
+	{
+		var message = payload.Deserialize<PeerMessage>();
+		if (message is null)
+		{
+			return;
+		}
+
+		switch (message.Type)
+		{
+			case "lobby":
+				if (message.Teams is not null)
+				{
+					LobbyTeams.Clear();
+					LobbyTeams.AddRange(message.Teams);
+					PeerTeamIndex = LobbyTeams.FindIndex(team => team.PeerId == PeerLocalId);
+					PeerJoining = false;
+					PeerConnectionStatus = PeerTeamIndex >= 0
+						? "Erfolgreich verbunden. Warte auf den Spielstart."
+						: "Verbindung hergestellt.";
+				}
+				break;
+			case "game-state":
+				if (message.Game is not null)
+				{
+					ApplyPeerGameState(message.Game);
+					PeerTeamIndex = LobbyTeams.FindIndex(team => team.PeerId == PeerLocalId);
+				}
+				break;
+		}
+	}
+
+	private bool IsPeerTeamActive(string peerId)
+	{
+		var index = Manager.AktuelleGruppe;
+		return index >= 0 && index < LobbyTeams.Count && LobbyTeams[index].PeerId == peerId;
+	}
+
+	private async Task BroadcastLobby()
+	{
+		await JS.InvokeVoidAsync("waagenPeer.broadcast", JsonSerializer.Serialize(new PeerMessage
+		{
+			Type = "lobby",
+			Teams = LobbyTeams
+		}));
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task BroadcastGameState()
+	{
+		await JS.InvokeVoidAsync("waagenPeer.broadcast", JsonSerializer.Serialize(new PeerMessage
+		{
+			Type = "game-state",
+			Game = CreatePeerGameState()
+		}));
+		await InvokeAsync(StateHasChanged);
+	}
 
 	private void GruppenanzahlGeaendert()
 	{
@@ -225,6 +534,39 @@ else
 		StatusText = $"{Manager.HoleAktuelleGruppe().Name} beginnt. Wähle einen Stein aus.";
 	}
 
+	private async Task StartPeerGame()
+	{
+		if (LobbyTeams.Count == 0)
+		{
+			return;
+		}
+
+		Manager = new SpielManager(LobbyTeams.Count);
+		ClearScales();
+		for (var index = 0; index < LobbyTeams.Count; index++)
+		{
+			var team = LobbyTeams[index];
+			Manager.Gruppen[index].Name = team.Name;
+			foreach (var stone in Manager.Gruppen[index].Steine)
+			{
+				if (team.Weights.TryGetValue(stone.Farbe, out var weight))
+				{
+					stone.Gewicht = weight;
+				}
+			}
+		}
+
+		PeerMode = "host";
+		SpielGestartet = true;
+		SpielBeendet = false;
+		SpielGewonnen = false;
+		RichtigGerateneFarben.Clear();
+		GewichteRatenSichtbar = false;
+		SelectedStone = null;
+		StatusText = $"{Manager.HoleAktuelleGruppe().Name} beginnt. Das Team platziert seine Steine.";
+		await BroadcastGameState();
+	}
+
 	private void SelectStone(Stein stone)
 	{
 		if (!stone.Platziert && !SpielBeendet)
@@ -238,6 +580,19 @@ else
 	{
 		if (SelectedStone is null || SelectedStone.Platziert)
 		{
+			return;
+		}
+
+		if (PeerMode == "join")
+		{
+			_ = JS.InvokeVoidAsync("waagenPeer.sendToHost", JsonSerializer.Serialize(new PeerMessage
+			{
+				Type = "place",
+				Color = SelectedStone.Farbe,
+				ScaleIndex = scaleIndex,
+				Left = left
+			}));
+			SelectedStone = null;
 			return;
 		}
 
@@ -266,10 +621,49 @@ else
 		SelectedStone = null;
 	}
 
+	private void PlaceSelectedStoneHost(int scaleIndex, bool left)
+	{
+		if (SelectedStone is null)
+		{
+			return;
+		}
+
+		if (left)
+		{
+			if (scaleIndex == 0 && !IstHauptwaagenKombinationGueltig(true))
+			{
+				StatusText = "Nicht möglich: Auf der Hauptwaage dürfen links und rechts nicht dieselben Steine liegen.";
+				return;
+			}
+			Waagen[scaleIndex].SteiLinksPlatzieren(SelectedStone);
+		}
+		else
+		{
+			if (scaleIndex == 0 && !IstHauptwaagenKombinationGueltig(false))
+			{
+				StatusText = "Nicht möglich: Auf der Hauptwaage dürfen links und rechts nicht dieselben Steine liegen.";
+				return;
+			}
+			Waagen[scaleIndex].SteinRechtsPlatzieren(SelectedStone);
+		}
+
+		StatusText = $"{SelectedStone.Farbe} liegt auf {(scaleIndex == 0 ? "der Hauptwaage" : "der Nebenwaage")}.";
+		SelectedStone = null;
+	}
+
 	private void EvaluateGame()
 	{
 		if (!CanEvaluate || SpielBeendet)
 		{
+			return;
+		}
+
+		if (PeerMode == "join")
+		{
+			_ = JS.InvokeVoidAsync("waagenPeer.sendToHost", JsonSerializer.Serialize(new PeerMessage
+			{
+				Type = "evaluate"
+			}));
 			return;
 		}
 
@@ -326,6 +720,19 @@ else
 	}
 
 	private int VerbleibendeSteine() => Manager.HoleAktuelleGruppe().Steine.Count(stone => !stone.Platziert);
+
+	private bool CanControlCurrentTeam
+	{
+		get
+		{
+			if (PeerMode == "local" || PeerMode == "host")
+			{
+				return PeerMode == "local";
+			}
+
+			return PeerTeamIndex >= 0 && PeerTeamIndex == Manager.AktuelleGruppe;
+		}
+	}
 
 	private bool CanEvaluate => Manager.HoleAktuelleGruppe().Steine.Count(stone => stone.Platziert) >= 2 || CanGuessWeights;
 
@@ -388,6 +795,136 @@ else
 		(left ? leftColors : rightColors).Add(SelectedStone.Farbe);
 
 		return !leftColors.OrderBy(color => color).SequenceEqual(rightColors.OrderBy(color => color));
+	}
+
+	private PeerGameState CreatePeerGameState()
+	{
+		return new PeerGameState
+		{
+			StatusText = StatusText,
+			CurrentTeam = Manager.AktuelleGruppe,
+			SpielBeendet = SpielBeendet,
+			SpielGewonnen = SpielGewonnen,
+			Teams = Manager.Gruppen.Select(group => new TeamGameSnapshot
+			{
+				Name = group.Name,
+				Stones = group.Steine.Select(stone => new StoneGameSnapshot
+				{
+					Color = stone.Farbe,
+					Weight = stone.Gewicht,
+					Placed = stone.Platziert
+				}).ToList()
+			}).ToList(),
+			Scales = Waagen.Select(scale => new ScaleGameSnapshot
+			{
+				Left = scale.LinkeSeite.Select(stone => new StoneGameSnapshot
+				{
+					Color = stone.Farbe,
+					Weight = stone.Gewicht,
+					Placed = stone.Platziert
+				}).ToList(),
+				Right = scale.RechteSeite.Select(stone => new StoneGameSnapshot
+				{
+					Color = stone.Farbe,
+					Weight = stone.Gewicht,
+					Placed = stone.Platziert
+				}).ToList()
+			}).ToList()
+		};
+	}
+
+	private void ApplyPeerGameState(PeerGameState state)
+	{
+		Manager = new SpielManager(state.Teams.Count);
+		Manager.AktuelleGruppe = state.CurrentTeam;
+
+		for (var teamIndex = 0; teamIndex < state.Teams.Count; teamIndex++)
+		{
+			var team = state.Teams[teamIndex];
+			Manager.Gruppen[teamIndex].Name = team.Name;
+			for (var stoneIndex = 0; stoneIndex < team.Stones.Count; stoneIndex++)
+			{
+				var stone = team.Stones[stoneIndex];
+				Manager.Gruppen[teamIndex].Steine[stoneIndex].Farbe = stone.Color;
+				Manager.Gruppen[teamIndex].Steine[stoneIndex].Gewicht = stone.Weight;
+				Manager.Gruppen[teamIndex].Steine[stoneIndex].Platziert = stone.Placed;
+			}
+		}
+
+		ClearScales();
+		for (var scaleIndex = 0; scaleIndex < state.Scales.Count && scaleIndex < Waagen.Count; scaleIndex++)
+		{
+			foreach (var stoneSnapshot in state.Scales[scaleIndex].Left)
+			{
+				Waagen[scaleIndex].LinkeSeite.Add(new Stein(stoneSnapshot.Color, stoneSnapshot.Weight)
+				{
+					Platziert = true
+				});
+			}
+			foreach (var stoneSnapshot in state.Scales[scaleIndex].Right)
+			{
+				Waagen[scaleIndex].RechteSeite.Add(new Stein(stoneSnapshot.Color, stoneSnapshot.Weight)
+				{
+					Platziert = true
+				});
+			}
+		}
+
+		StatusText = state.StatusText;
+		SpielBeendet = state.SpielBeendet;
+		SpielGewonnen = state.SpielGewonnen;
+		SelectedStone = null;
+		SpielGestartet = true;
+		PeerMode = "join";
+		InvokeAsync(StateHasChanged);
+	}
+
+	private sealed class LobbyTeam
+	{
+		public string PeerId { get; set; } = string.Empty;
+		public string Name { get; set; } = string.Empty;
+		public Dictionary<string, int> Weights { get; set; } = new();
+	}
+
+	private sealed class PeerMessage
+	{
+		public string Type { get; set; } = string.Empty;
+		public string? TeamName { get; set; }
+		public Dictionary<string, int>? Weights { get; set; }
+		public List<LobbyTeam>? Teams { get; set; }
+		public PeerGameState? Game { get; set; }
+		public string? Color { get; set; }
+		public int ScaleIndex { get; set; }
+		public bool Left { get; set; }
+	}
+
+	private sealed class PeerGameState
+	{
+		public string StatusText { get; set; } = string.Empty;
+		public int CurrentTeam { get; set; }
+		public bool SpielBeendet { get; set; }
+		public bool SpielGewonnen { get; set; }
+		public List<TeamGameSnapshot> Teams { get; set; } = new();
+		public List<ScaleGameSnapshot> Scales { get; set; } = new();
+	}
+
+	private sealed class TeamGameSnapshot
+	{
+		public string Name { get; set; } = string.Empty;
+		public List<StoneGameSnapshot> Stones { get; set; } = new();
+	}
+
+	private sealed class StoneGameSnapshot
+	{
+		public string Color { get; set; } = string.Empty;
+		public int Weight { get; set; }
+		public bool Placed { get; set; }
+	}
+
+	private sealed class ScaleGameSnapshot
+	{
+		public List<StoneGameSnapshot> Left { get; set; } = new();
+		public List<StoneGameSnapshot> Right { get; set; } = new();
 	}
 
 	private static string GewichtsStatus(Waage scale)
