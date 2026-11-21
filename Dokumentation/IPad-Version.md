@@ -312,7 +312,7 @@ Die Waagen heissen in der Anwendung jetzt:
 - **Hauptwaage** statt Waage 1
 - **Nebenwaage** statt Waage 2
 
-Die konkreten Gewichte werden nicht mehr angezeigt. Unter den Seiten steht nur noch `Gewicht verborgen`; im Kopf der Waage wird stattdessen `Linke Seite schwerer`, `Rechte Seite schwerer`, `Im Gleichgewicht` oder bei einer leeren Waage `Noch keine Steine platziert` angezeigt. Das Spiel soll dadurch ueber die Farbkombinationen und den relativen Vergleich geloest werden, nicht durch direktes Ablesen der Zahlen.
+Die konkreten Gewichte werden nicht mehr angezeigt. Im Kopf der Waage wird stattdessen `Linke Seite schwerer`, `Rechte Seite schwerer`, `Im Gleichgewicht` oder bei einer leeren Waage `Noch keine Steine platziert` angezeigt. Das Spiel soll dadurch ueber die Farbkombinationen und den relativen Vergleich geloest werden, nicht durch direktes Ablesen der Zahlen.
 
 ### Einen Stein platzieren
 

@@ -26,6 +26,20 @@ button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
 .setup-field input:focus, .setup-field select:focus { border-color: var(--teal); outline: 3px solid rgba(13, 119, 113, .16); }
 .group-name-list { display: grid; gap: 0 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; }
 .start-action { margin-top: 28px; width: 100%; }
+.mode-choice { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 24px; }
+.mode-card { background: #f6f3ec; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); cursor: pointer; display: flex; flex-direction: column; gap: 7px; min-height: 96px; padding: 16px; text-align: left; }
+.mode-card strong { font-family: 'Space Grotesk', sans-serif; }
+.mode-card span { color: var(--muted); font-size: .82rem; }
+.mode-card.selected { background: #edf7f4; border-color: var(--teal); }
+.peer-choice { display: flex; gap: 8px; margin-top: 22px; }
+.peer-choice .secondary-action.selected { background: var(--teal); color: white; }
+.room-code { background: #edf7f4; border: 1px solid #c8ddd2; border-radius: 12px; display: flex; flex-direction: column; gap: 4px; margin-top: 22px; padding: 14px 16px; }
+.room-code span { color: var(--muted); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+.room-code strong { color: var(--teal-dark); font-size: 1.15rem; overflow-wrap: anywhere; }
+.peer-lobby { margin-top: 20px; }
+.lobby-team { align-items: center; border-bottom: 1px solid var(--line); display: flex; gap: 12px; justify-content: space-between; padding: 12px 2px; }
+.lobby-team span { color: var(--muted); font-size: .78rem; text-align: right; }
+.peer-weight-grid { display: grid; gap: 8px; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 18px; }
 .game-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 28px; }
 .eyebrow, .card-kicker { color: var(--teal); font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .eyebrow { margin: 0 0 8px; }
@@ -80,5 +94,5 @@ h2 { font-size: 1.2rem; }
 .guess-field input { border: 1px solid var(--line); border-radius: 6px; min-width: 0; padding: 8px; text-align: center; width: 52px; }
 .guess-field input:focus { border-color: var(--teal); outline: 2px solid rgba(13, 119, 113, .16); }
 .guess-result { background: var(--panel); border-left: 4px solid var(--teal); color: var(--teal-dark); font-weight: 700; margin: 16px 0 0; padding: 12px 14px; }
-@media (max-width: 700px) { .game-shell { padding: 28px 16px 44px; } .setup-shell { padding-top: 16px; } .setup-panel { padding: 24px 18px; } .group-name-list { grid-template-columns: 1fr; } .game-header { align-items: flex-start; } .round-badge { min-width: 72px; padding: 10px; } .scale-grid { grid-template-columns: 1fr; } .stone-grid { grid-template-columns: repeat(5, minmax(48px, 1fr)); } .stone-button { font-size: .75rem; min-height: 88px; } .placement-controls { align-items: stretch; flex-direction: column; } .placement-actions { justify-content: stretch; } .target-button { flex: 1 1 45%; } .action-row { flex-direction: column; } .primary-action, .secondary-action { width: 100%; } .guess-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .game-shell { padding: 28px 16px 44px; } .setup-shell { padding-top: 16px; } .setup-panel { padding: 24px 18px; } .group-name-list { grid-template-columns: 1fr; } .mode-choice { grid-template-columns: 1fr; } .peer-choice { flex-direction: column; } .peer-weight-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .game-header { align-items: flex-start; } .round-badge { min-width: 72px; padding: 10px; } .scale-grid { grid-template-columns: 1fr; } .stone-grid { grid-template-columns: repeat(5, minmax(48px, 1fr)); } .stone-button { font-size: .75rem; min-height: 88px; } .placement-controls { align-items: stretch; flex-direction: column; } .placement-actions { justify-content: stretch; } .target-button { flex: 1 1 45%; } .action-row { flex-direction: column; } .primary-action, .secondary-action { width: 100%; } .guess-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 430px) { .subtitle { font-size: .88rem; } .scale-card, .selection-panel { padding: 17px; } .stone-button { padding: 10px 3px; } .stone-button small { display: none; } }
