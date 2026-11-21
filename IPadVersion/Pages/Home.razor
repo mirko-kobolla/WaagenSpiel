@@ -99,16 +99,6 @@
 						<label for="team-name">Name des Teams</label>
 						<input id="team-name" @bind="PeerTeamName" maxlength="30" placeholder="Teamname" />
 					</div>
-					<div class="peer-weight-grid">
-						@foreach (var color in Farben)
-						{
-							<label class="guess-field">
-								<span class="mini-stone @color.ToLowerInvariant()">@color</span>
-								<input type="number" min="1" @bind="PeerWeights[color]" @bind:after="SendPeerWeights" />
-								<span>g</span>
-							</label>
-						}
-					</div>
 					<button class="primary-action start-action" disabled="@(PeerJoining || PeerJoined || string.IsNullOrWhiteSpace(PeerRoomId) || string.IsNullOrWhiteSpace(PeerTeamName))" @onclick="JoinPeerRoom">
 						Team hinzufügen <span>→</span>
 					</button>
@@ -328,14 +318,6 @@ else
 	private readonly List<string> PeerScaleStatuses = new() { "Noch keine Steine platziert", "Noch keine Steine platziert" };
 	private DotNetObjectReference<Home>? PeerDotNetReference;
 	private readonly List<LobbyTeam> LobbyTeams = new();
-	private readonly Dictionary<string, int> PeerWeights = new()
-	{
-		["Rot"] = 2,
-		["Lila"] = 7,
-		["Gelb"] = 10,
-		["Blau"] = 16,
-		["Grün"] = 19
-	};
 
 	private void SetPeerMode(string mode)
 	{
@@ -370,18 +352,6 @@ else
 		await JS.InvokeVoidAsync("waagenPeer.joinRoom", PeerRoomId, PeerDotNetReference);
 	}
 
-	private async Task SendPeerWeights()
-	{
-		if (PeerMode == "join" && PeerJoining)
-		{
-			await JS.InvokeVoidAsync("waagenPeer.sendToHost", JsonSerializer.Serialize(new PeerMessage
-			{
-				Type = "weights",
-				Weights = PeerWeights
-			}));
-		}
-	}
-
 	[JSInvokable]
 	public async Task OnPeerEvent(string eventJson)
 	{
@@ -405,8 +375,7 @@ else
 				await JS.InvokeVoidAsync("waagenPeer.sendToHost", JsonSerializer.Serialize(new PeerMessage
 				{
 					Type = "join",
-					TeamName = PeerTeamName.Trim(),
-					Weights = PeerWeights
+					TeamName = PeerTeamName.Trim()
 				}));
 				PeerConnectionStatus = "Beitritt gesendet.";
 				break;
@@ -458,24 +427,14 @@ else
 					LobbyTeams.Add(new LobbyTeam
 					{
 						PeerId = peerId,
-						Name = string.IsNullOrWhiteSpace(message.TeamName) ? $"Team {LobbyTeams.Count + 1}" : message.TeamName,
-						Weights = message.Weights ?? new Dictionary<string, int>(PeerWeights)
+						Name = string.IsNullOrWhiteSpace(message.TeamName) ? $"Team {LobbyTeams.Count + 1}" : message.TeamName
 					});
 				}
 				else
 				{
 					existing.Name = message.TeamName ?? existing.Name;
-					existing.Weights = message.Weights ?? existing.Weights;
 				}
 				await BroadcastLobby();
-				break;
-			case "weights":
-				var team = LobbyTeams.FirstOrDefault(item => item.PeerId == peerId);
-				if (team is not null)
-				{
-					team.Weights = message.Weights ?? team.Weights;
-					await BroadcastLobby();
-				}
 				break;
 			case "place":
 				if (SpielGestartet && IsPeerTeamActive(peerId))
@@ -542,8 +501,7 @@ else
 			Teams = LobbyTeams.Select(team => new LobbyTeam
 			{
 				PeerId = team.PeerId,
-				Name = team.Name,
-				Weights = new Dictionary<string, int>()
+				Name = team.Name
 			}).ToList()
 		}));
 		await InvokeAsync(StateHasChanged);
@@ -600,13 +558,6 @@ else
 		{
 			var team = LobbyTeams[index];
 			Manager.Gruppen[index].Name = team.Name;
-			foreach (var stone in Manager.Gruppen[index].Steine)
-			{
-				if (team.Weights.TryGetValue(stone.Farbe, out var weight))
-				{
-					stone.Gewicht = weight;
-				}
-			}
 		}
 
 		PeerMode = "host";
@@ -945,14 +896,12 @@ else
 	{
 		public string PeerId { get; set; } = string.Empty;
 		public string Name { get; set; } = string.Empty;
-		public Dictionary<string, int> Weights { get; set; } = new();
 	}
 
 	private sealed class PeerMessage
 	{
 		public string Type { get; set; } = string.Empty;
 		public string? TeamName { get; set; }
-		public Dictionary<string, int>? Weights { get; set; }
 		public List<LobbyTeam>? Teams { get; set; }
 		public PeerGameState? Game { get; set; }
 		public string? Color { get; set; }
