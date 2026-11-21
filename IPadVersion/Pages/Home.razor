@@ -493,6 +493,12 @@ else
 		return index >= 0 && index < LobbyTeams.Count && LobbyTeams[index].PeerId == peerId;
 	}
 
+	private bool IsCurrentPeerTeam()
+	{
+		return PeerTeamIndex >= 0
+			&& PeerTeamIndex == Manager.AktuelleGruppe;
+	}
+
 	private async Task BroadcastLobby()
 	{
 		await JS.InvokeVoidAsync("waagenPeer.broadcast", JsonSerializer.Serialize(new PeerMessage
@@ -657,8 +663,15 @@ else
 
 	private void EvaluateGame()
 	{
+		if (PeerMode == "join" && !IsCurrentPeerTeam())
+		{
+			StatusText = "Nur das Team mit dem aktuellen Zug kann den Zug beenden.";
+			return;
+		}
+
 		if (!CanEvaluate || SpielBeendet)
 		{
+			StatusText = "Zug beenden ist erst möglich, wenn mindestens zwei eigene Steine platziert sind oder die Hauptwaage ausgeglichen ist.";
 			return;
 		}
 
@@ -758,6 +771,12 @@ else
 			return;
 		}
 
+		if (!CanGuessWeights)
+		{
+			StatusText = "Die Gewichtsabfrage ist erst möglich, wenn die Hauptwaage ausgeglichen ist.";
+			return;
+		}
+
 		GewichteRatenSichtbar = true;
 		foreach (var color in Farben)
 		{
@@ -771,6 +790,13 @@ else
 	{
 		if (PeerMode == "join")
 		{
+			return;
+		}
+
+		if (!CanGuessWeights)
+		{
+			GewichtsErgebnis = "Die Gewichtsabfrage ist erst möglich, wenn die Hauptwaage ausgeglichen ist.";
+			StatusText = GewichtsErgebnis;
 			return;
 		}
 
