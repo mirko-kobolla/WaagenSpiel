@@ -745,7 +745,8 @@ else
 
 	private bool CanEvaluate => Manager.HoleAktuelleGruppe().Steine.Count(stone => stone.Platziert) >= 2 || CanGuessWeights;
 
-	private bool CanGuessWeights => Waagen[0].LinkeSeite.Count + Waagen[0].RechteSeite.Count > 0
+	private bool CanGuessWeights => PeerMode != "join"
+		&& Waagen[0].LinkeSeite.Count + Waagen[0].RechteSeite.Count > 0
 		&& Waagen[0].GewichtLinks() == Waagen[0].GewichtRechts();
 
 	private bool AlleSteinePlatziert() => Manager.Gruppen.SelectMany(group => group.Steine).All(stone => stone.Platziert);
