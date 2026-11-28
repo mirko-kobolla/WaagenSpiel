@@ -261,10 +261,10 @@ else
 				<div class="end-symbol @(SpielGewonnen ? "won" : "lost")" aria-hidden="true">
 					@(SpielGewonnen ? "★" : "◆")
 				</div>
-				<h2 id="end-title">@(SpielGewonnen ? "Gewonnen!" : "Nicht gewonnen")</h2>
+				<h2 id="end-title">@(SpielGewonnen ? "Gewonnen!" : "Verloren!")</h2>
 				<p>@(SpielGewonnen
 					? "Alle Aufgaben wurden erfolgreich abgeschlossen."
-					: "Die Hauptwaage oder die Gewichte waren am Ende nicht vollständig korrekt.")</p>
+					: EndGrund)</p>
 
 				<div class="end-result">
 					<div>
@@ -306,6 +306,7 @@ else
 	private string GewichtsErgebnis = string.Empty;
 	private bool SpielBeendet;
 	private bool SpielGewonnen;
+	private string EndGrund = "Die Hauptwaage oder die Gewichte waren am Ende nicht vollständig korrekt.";
 
 	private string PeerMode = "local";
 	private string PeerRoomId = string.Empty;
@@ -452,6 +453,10 @@ else
 					await BroadcastGameState();
 				}
 				break;
+			case "reset":
+				PrepareReset();
+				await BroadcastReset();
+				break;
 		}
 	}
 
@@ -483,6 +488,9 @@ else
 					ApplyPeerGameState(message.Game);
 					PeerTeamIndex = LobbyTeams.FindIndex(team => team.PeerId == PeerLocalId);
 				}
+				break;
+			case "reset":
+				PrepareReset();
 				break;
 		}
 	}
@@ -523,6 +531,15 @@ else
 		await InvokeAsync(StateHasChanged);
 	}
 
+	private async Task BroadcastReset()
+	{
+		await JS.InvokeVoidAsync("waagenPeer.broadcast", JsonSerializer.Serialize(new PeerMessage
+		{
+			Type = "reset"
+		}));
+		await InvokeAsync(StateHasChanged);
+	}
+
 	private void GruppenanzahlGeaendert()
 	{
 		while (Gruppennamen.Count < AnzahlGruppen)
@@ -545,6 +562,7 @@ else
 		SpielGestartet = true;
 		SpielBeendet = false;
 		SpielGewonnen = false;
+		EndGrund = "Die Hauptwaage oder die Gewichte waren am Ende nicht vollständig korrekt.";
 		RichtigGerateneFarben.Clear();
 		GewichteRatenSichtbar = false;
 		SelectedStone = null;
@@ -570,6 +588,7 @@ else
 		SpielGestartet = true;
 		SpielBeendet = false;
 		SpielGewonnen = false;
+		EndGrund = "Die Hauptwaage oder die Gewichte waren am Ende nicht vollständig korrekt.";
 		RichtigGerateneFarben.Clear();
 		GewichteRatenSichtbar = false;
 		SelectedStone = null;
@@ -694,6 +713,11 @@ else
 		{
 			SpielBeendet = true;
 			SpielGewonnen = isBalanced && RichtigGerateneFarben.Count == Farben.Length;
+			EndGrund = SpielGewonnen
+				? "Alle Aufgaben wurden erfolgreich abgeschlossen."
+				: !isBalanced
+					? "Am Ende ist die Hauptwaage nicht ausgeglichen."
+					: $"Es wurden nur {RichtigGerateneFarben.Count} von {Farben.Length} Gewichten richtig geraten.";
 			StatusText = SpielGewonnen
 				? "Gewonnen! Alle Steine sind platziert, die Hauptwaage ist ausgeglichen und alle Gewichte wurden richtig geraten."
 				: "Verloren. Alle Steine sind platziert, aber die Hauptwaage ist nicht ausgeglichen oder nicht alle Gewichte wurden richtig geraten.";
@@ -708,13 +732,32 @@ else
 		}
 		else
 		{
-			StatusText = isBalanced
-				? "Alle Gruppen waren an der Reihe. Die Hauptwaage ist ausgeglichen."
-				: "Alle Gruppen waren an der Reihe. Starte eine neue Partie für einen weiteren Durchgang.";
+			SpielBeendet = true;
+			SpielGewonnen = false;
+			EndGrund = "Es sind keine spielbereiten Gruppen mehr vorhanden, obwohl nicht alle Steine platziert wurden.";
+			StatusText = "Das Spiel ist beendet. Keine Gruppe kann noch einen Zug ausführen.";
 		}
 	}
 
-	private void ResetGame()
+	private async Task ResetGame()
+	{
+		if (PeerMode == "join")
+		{
+			await JS.InvokeVoidAsync("waagenPeer.sendToHost", JsonSerializer.Serialize(new PeerMessage
+			{
+				Type = "reset"
+			}));
+			return;
+		}
+
+		PrepareReset();
+		if (PeerMode == "host")
+		{
+			await BroadcastReset();
+		}
+	}
+
+	private void PrepareReset()
 	{
 		SpielGestartet = false;
 		Manager = new SpielManager(AnzahlGruppen);
@@ -722,13 +765,12 @@ else
 		SelectedStone = null;
 		SpielBeendet = false;
 		SpielGewonnen = false;
+		EndGrund = "Die Hauptwaage oder die Gewichte waren am Ende nicht vollständig korrekt.";
 		RichtigGerateneFarben.Clear();
 		GewichteRatenSichtbar = false;
 		PeerJoining = false;
 		PeerJoined = false;
 		PeerTeamIndex = -1;
-		LobbyTeams.Clear();
-		PeerRoomId = string.Empty;
 		StatusText = "Wähle die Gruppen und starte eine neue Partie.";
 	}
 
@@ -851,6 +893,7 @@ else
 			CurrentTeam = Manager.AktuelleGruppe,
 			SpielBeendet = SpielBeendet,
 			SpielGewonnen = SpielGewonnen,
+			EndGrund = EndGrund,
 			RichtigGerateneFarben = RichtigGerateneFarben.Count,
 			Teams = Manager.Gruppen.Select(group => new TeamGameSnapshot
 			{
@@ -918,6 +961,7 @@ else
 		StatusText = state.StatusText;
 		SpielBeendet = state.SpielBeendet;
 		SpielGewonnen = state.SpielGewonnen;
+		EndGrund = state.EndGrund;
 		RichtigGerateneFarben.Clear();
 		for (var index = 0; index < state.RichtigGerateneFarben; index++)
 		{
@@ -952,6 +996,7 @@ else
 		public int CurrentTeam { get; set; }
 		public bool SpielBeendet { get; set; }
 		public bool SpielGewonnen { get; set; }
+		public string EndGrund { get; set; } = "Die Hauptwaage oder die Gewichte waren am Ende nicht vollständig korrekt.";
 		public int RichtigGerateneFarben { get; set; }
 		public List<TeamGameSnapshot> Teams { get; set; } = new();
 		public List<ScaleGameSnapshot> Scales { get; set; } = new();
