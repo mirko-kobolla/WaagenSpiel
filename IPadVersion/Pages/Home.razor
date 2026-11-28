@@ -995,5 +995,13 @@ else
 
 	private static string StoneClass(Stein stone) => stone.Farbe.ToLowerInvariant();
 
-	private static string SteinHinweis(Stein stone) => stone.Platziert ? "platziert" : "unbekannt";
+	private static string SteinHinweis(Stein stone)
+	{
+		if (stone.Farbe == "Gelb")
+		{
+			return "10 g";
+		}
+
+		return stone.Platziert ? "platziert" : "unbekannt";
+	}
 }
